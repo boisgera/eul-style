@@ -1,0 +1,3 @@
+#!/bin/bash
+stylus --include-css style.styl
+
