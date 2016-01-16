@@ -1,31 +1,103 @@
 @import "reset.css"
 
-html
-  body
-    max-width: 32em
-    margin: auto
-    font-family: Alegreya, serif
-    font-size: 22px
+// This shit sucks so much, I am tired of Stylus & co.
+// Try AbsurdJS ?
+
+// TODO: factor out / name font info and color info.
+//       Question: how ffs ? mixins don't import their variables AFAICT
+//       @extend sucks ... only @import may work, but it requires an
+//       external file !!! I am not even sure it works, probably not.
+//       It probably expands declaration but not variables.
+//       Use property lookup ?
+
+r = 1.4142135623730951 // sqrt(2)
+size = 24
+medium = round(size)px
+small  = round(medium / r)px
+large  = round(medium * r)px
+huge   = round(medium * r * r)px
+
+// How can I manage two families such as Alegreya and Alegrey SC ?
+typography()
+  // two different things here: general settings and a specific style info.
+
+  // TODO: consider associated line-heights / margins to keep a constant vert rhythm.
+
+
+  font-family: Alegreya, serif
+  color: black // really ? HERE ?
+
+  font-size: medium
+  font-weight: normal
+  font-style: normal
+  em
+    font-style: italic
+  strong
+    font-weight: bold
+
+  p
+    line-height: 1.5em
     text-align: justify
-    text-rendering: optimizeLegibility
     hyphens: auto
     -moz-hyphens: auto
 
-    header.main
-      h1
-        font-size: 48px
-        font-weight: bold
-      h2
-        font-size: 36px
-        font-weight: bold
-      h3
-        font-size: 22px
-        font-weight: bold
+  text-rendering: optimizeLegibility
 
+
+
+layout()
+  // min-width: 12em // can we do that ? // when does the window does decide 
+  // that the viewport size is too small and adds a slider ? For small widths,
+  // the body gets reduced, but the window/viewport or whatever contains it
+  // stops getting thiner, and a scroll appears. FUCK, THIS IS BULLSHIT.
+  // even the html element states that it's getting thinner, but still,
+  // the scroll bar tells me otherwise.
+
+
+  // probably need to transfer this in "main"; some control elements
+  // may not like being padded or constrained in width like that.
+  // make the "toplevel container" configurable ?
+  max-width: 32em
+  margin: auto
+  padding: 1.5em 
+
+html
+  body
+    // box-sizing: border-box : consider it, but study the impact first
+    layout()
+    typography()
+
+    > header
+      border-top: 3px solid #000000
+      margin: 33px 0em 33px 0em
+      h1
+        font-size: huge
+//        line-height: 66px
+//        font-weight: bold
+//        padding-top: 7px
+//        margin-bottom: -7px
+        //margin: 0em 0em 0em 0em //margin: 0.25em 0em 0.25em 0em
+      .author
+        line-height: 33px
+        padding-top: 31px
+        margin-bottom: 2px
+        //margin: 0.25em 0em 0.5em 0em
+        font-size: medium
+        //font-weight: bold
+      .date
+        line-height: 33px
+        //margin: 0.25em 0em 0.5em 0em
+        font-family: "Alegreya SC", serif
+        font-size: medium
+        font-weight: normal
+      p
+        font-size: medium
+        font-weight: normal
     a
       text-decoration: none
+      outline: 0;
     a:hover
-      text-decoration: underline
+      text-decoration: none
 
     h1, h2, h3, h4, h5, h6
       a:hover
@@ -37,46 +109,42 @@ html
     a:visited
       color: black
 
-    h1.title
-      font-size: 48px;
-      font-weight: bold;
-
     h1
-      font-size: 36px
+      line-height: 1.5em
+      font-size: large
       font-weight: bold
 
     h2
       font-size: 28px
       font-weight: bold
 
-    h3
-      font-size: 22px
-      font-weight: bold
-
-    h4, h5, h6
+    h3, h4, h5, h6
       font-size: 22px
       font-weight: bold
       float: left
       margin-right: 1em
       margin-top: 0px
       margin-bottom: 0px
-      &::after
-        content: "."
 
     p
-      margin-top: 1em
-      margin-bottom: 1em
+      margin-top: 0em
+      margin-bottom: 1.5em
+
+    sup
+      vertical-align: super
+      fontSize: 14px
 
     code
-      /* background-color: rgb(235,235,235); */
-      font-family: Inconsolata;
+      font-size: 22px//20.5px
+      font-family: Inconsolata
 
     pre
-      margin: 1em 0em 1em 0em
-      padding: 0.5em 1em 0.5em 1em
-      background-color: rgb(235,235,235)
-      code
-        color: black
+      overflow-x: auto
+      line-height: 33px//1.25
+      background-color: #ebebeb
+      margin-top: 1.5em
+      margin-bottom: 1.5em
+      padding: 0.75em 1.5em 0.75em 1.5em // 0.5em 1em 0.5em 1em
 
     blockquote
       background: #f9f9f9
@@ -89,9 +157,11 @@ html
         &:last-child
           margin-bottom: 0em;
 
-    /*
-     * Images and Figures
-     */
+    ul
+      list-style-type: disc
+      li
+        marginLeft: 2em
+
     img
       width: 32em
 
@@ -102,10 +172,6 @@ html
 
     figure
       margin: 0px
-
-    /*
-     * Math
-     */
 
     .tombstone
       float: right
