@@ -1,10 +1,33 @@
+#!/usr/bin/env coffee
+
+# Usage: 
+#
+#     $ coffee style.coffee [--style=style.css] [--html=output.html] [input.html]`
+
+# Standard Node
+fs = require "fs"
+process = require "process"
+
+# Third-Party 
+absurd = do -> # absurd.js fucks up with command-line args.
+  argv = process.argv
+  process.argv = ["coffee"]
+  absurd = require "absurd"
+  process.argv = argv
+  absurd
+
+jquery = require "jquery"
+jsdom = require "jsdom"
+parseArgs = require "minimist"
+
+
 
 defaults = ->
   "*":
     margin: 0
     padding: 0
     border: 0
-    boxSizing: "content-box" # "border-box" 
+    boxSizing: "content-box" # "border-box" ? Study the transition (changes aspect)
     fontSize: "100%"
     font: "inherit"
     verticalAlign: "baseline"
@@ -25,24 +48,34 @@ defaults = ->
 # Colors
 color = "black"
 
+
 # Typography
+
+# TODO: bring code typo here ? That would make sense. Defines font families too.
 base = 24
-lineHeight = base * 1.5
+lineHeight = base * 1.5 # prepare for rems instead of px ?
 ratio = Math.sqrt(2)
+# TODO: use "xx-small, x-small, small, medium, large, x-large, xx-large" ?
+#       (they are actually valid *values*) --> get xLarge instead of huge.
 small  = Math.round(base / ratio) + "px"
 medium = Math.round(base) + "px"
 large  = Math.round(base * ratio) + "px"
-huge   = Math.round(base * ratio * ratio) + "px"
+xLarge = Math.round(base * ratio * ratio) + "px"
 
-# TODO: document the use of Alegreya, Al. SC, Inconsolata.
-
-typography = ->
-  html:
-    body:
-      fontFamily: "Alegreya, serif"
+typography =
+  html: ($) -> # TODO: check that the link is not already here ?
+    family = "Alegreya:400,400italic,700,700italic|Alegreya+SC:400,400italic,700,700italic"
+    link = $ "<link>",
+      href: "https://fonts.googleapis.com/css?family=#{family}"
+      rel: "stylesheet"
+      type: "text/css"
+    $("head").append link
+  style:
+    html:
       fontSize: medium
       fontStyle: "normal"
       fontWeight: "normal"
+      fontFamily: "Alegreya, serif"
       em:
         fontStyle: "italic"
       strong:
@@ -50,7 +83,9 @@ typography = ->
       textRendering: "optimizeLegibility"
       lineHeight: lineHeight + "px"
       textAlign: "left"
-      p:
+      p: # migrate to (text) layout ? Pff dunno ... typo would be family,
+         # style, lineheight ? But this is dispatched in many places 
+         # (header stuff, etc.)
         marginBottom: lineHeight + "px"
         textAlign: "justify"
         hyphens: "auto"
@@ -58,19 +93,29 @@ typography = ->
       
 layout = ->
   html:
-    body:
-      maxWidth: "32em"
+    body: # pfff not body (adapt pandoc build to have another top-level component.
+          # the easiest thing to do is probably to have a "main" class, it's
+          # flexible wrt the actual tag soup ...)
+
+      # Nota: this is probably the only place where we want content-box model,
+      #       so define border-box in defaults to everything.
+
+      boxSizing: "content-box" # check this ... check that 32 em applies to
+      maxWidth: "32em"         # the text WITHOUT the padding.
       margin: "auto"
-      padding: lineHeight + "px" 
+      padding: lineHeight + "px" # use rems instead (1.5rem)?
 
 header = ->
   body:
-    "> header":
+    "> header": # child of body is probably not appropriate ...
+                # instead, search for "a top-level section" (main, article, 
+                # class="main", etc.) and select the headers that are children
+                # -- not descendants -- of these.
       #borderTop: "3px solid #000000"
       marginTop: 2.0 * lineHeight + "px" # not sure that's the right place.
       marginBottom: lineHeight + "px"
       h1:
-        fontSize: huge
+        fontSize: xLarge
         lineHeight: 1.5 * lineHeight + "px"
         marginTop: 0.0 * lineHeight + "px" # compensate somewhere else, here
         marginBottom: lineHeight + "px"    # is not the place.
@@ -127,25 +172,26 @@ code = ->
   pre:
     overflowX: "auto"
     backgroundColor: "#ebebeb"
-    marginTop: 1 * lineHeight + "px"
+    #marginTop: 1 * lineHeight + "px"
     marginBottom: 1 * lineHeight + "px"
     paddingLeft: lineHeight + "px"
     paddingRight: lineHeight + "px"
     paddingTop : 1 * lineHeight + "px"
     paddingBottom : 1 * lineHeight + "px"
 
-module.exports = (absurd) -> 
-  absurd.add defaults()
-  absurd.add typography()
-  absurd.add layout()
-  absurd.add header()
-  absurd.add headings()
-  absurd.add links()
-  absurd.add code()
 
+absurdify = (api) ->
+    api.add defaults()
+    api.add typography.style
+    api.add layout()
+    api.add header()
+    api.add headings()
+    api.add links()
+    api.add code()
+    api
 
-
-
+domify = ($) -> 
+  typography.html($)
 
 
 
@@ -285,4 +331,72 @@ module.exports = (absurd) ->
 #      svg
 #        color: black;
 
+
+# Commande-Line API
+# ------------------------------------------------------------------------------
+main = ->
+  argv = process.argv[2..]
+  {h: h1, html: h2, s: s1, style: s2, _: inputHTMLFilenames} = parseArgs(argv)
+  HTMLFilename = if h1 then h1 else h2
+  CSSFilename = if s1 then s1 else s2
+
+  # Generate the CSS
+  aboutCSS = {}
+  absurd (api) ->
+    absurdify api
+    api.compile (error, css) ->
+      if error?
+        console.error error
+        process.exit 1
+      else
+        if CSSFilename?
+          try
+            fs.writeFileSync CSSFilename, css, "utf-8"
+          catch error
+            console.log error
+            process.exit 1
+          aboutCSS.external = CSSFilename 
+        else
+          aboutCSS.inline = css
+
+  # Transform the HTML (if any)
+  if inputHTMLFilenames.length or HTMLFilename?
+    if inputHTMLFilenames.length
+      # Load the original document
+      html = fs.readFileSync inputHTMLFilenames[0], "utf-8"
+      window = jsdom.jsdom().defaultView
+      doc = window.document.open "text/html", "replace"
+      doc.write html
+      doc.close()
+    else
+      window = jsdom.jsdom().defaultView
+
+    $ = jquery(window)
+    if aboutCSS.external? # Link the stylesheet
+      link = $ "<link>",
+        href: aboutCSS.external 
+        rel: "stylesheet" 
+        type: "text/css"
+      $("head").append link
+    else # Inline the stylesheet
+      style = $ "<style></style>",
+        type: "text/css"
+        text: aboutCSS.inline
+      $("head").append style
+
+    # Perform the other DOM transformations
+    domify($) 
+
+    # Write the result
+    outputString = window.document.documentElement.outerHTML
+    if HTMLFilename?
+      fs.writeFileSync HTMLFilename, outputString, "utf-8"
+    else
+      console.log outputString
+  else # no HTML in or out, output the stylesheet (if no CSS output file).
+    if aboutCSS.inline?
+      console.log aboutCSS.inline
+    
+
+main()
 
