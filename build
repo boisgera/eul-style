@@ -1,5 +1,0 @@
-#!/bin/bash
-coffee --bare -c style.coffee
-absurd -s style.js -o style.css
-#stylus --include-css style.styl
-
