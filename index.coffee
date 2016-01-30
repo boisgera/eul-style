@@ -397,6 +397,5 @@ main = ->
     if aboutCSS.inline?
       console.log aboutCSS.inline
     
-
 main()
 

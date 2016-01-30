@@ -1,0 +1,21 @@
+{
+  "name": "css",
+  "version": "1.0.0",
+  "description": "apply CSS",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boisgera/css.git"
+  },
+  "author": "Sébastien Boisgérault <Sebastien.Boisgerault@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/boisgera/css/issues"
+  },
+  "homepage": "https://github.com/boisgera/css#readme",
+  "bin": {
+    "css": "index.js"
+  }
+}
