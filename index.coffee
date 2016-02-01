@@ -184,18 +184,27 @@ quote = ->
     marginLeft: 1 * lineHeight + "px"
     marginRight: 1 * lineHeight + "px"
 
-code = ->
-  code:
-    fontFamily: "Inconsolata"
-  pre:
-    overflowX: "auto"
-    backgroundColor: "#ebebeb"
-    #marginTop: 1 * lineHeight + "px"
-    marginBottom: 1 * lineHeight + "px"
-    paddingLeft: lineHeight + "px"
-    paddingRight: lineHeight + "px"
-    paddingTop : 1 * lineHeight + "px"
-    paddingBottom : 1 * lineHeight
+code =
+  html: ($) ->
+    family = "Inconsolata:400,700"
+    link = $ "<link>",
+      href: "https://fonts.googleapis.com/css?family=#{family}"
+      rel: "stylesheet"
+      type: "text/css"
+    $("head").append link
+  css:
+    code:
+      fontSize: medium
+      fontFamily: "Inconsolata"
+    pre:
+      overflowX: "auto"
+      backgroundColor: "#ebebeb"
+      #marginTop: 1 * lineHeight + "px"
+      marginBottom: 1 * lineHeight + "px"
+      paddingLeft: lineHeight + "px"
+      paddingRight: lineHeight + "px"
+      paddingTop : 1 * lineHeight + "px"
+      paddingBottom : 1 * lineHeight
 
 mathjax = ($) ->
   old = $("head script").filter (i, elt) -> 
@@ -220,12 +229,13 @@ absurdify = (api) ->
     api.add links()
     api.add lists()
     api.add quote()
-    api.add code()
+    api.add code.css
     api
 
 domify = ($, options) ->
   defaults.html($)
   typography.html($)
+  code.html($)
   mathjax($) if $(".math").length
 
   
