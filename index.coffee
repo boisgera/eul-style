@@ -206,7 +206,8 @@ mathjax = ($) ->
   script = window.document.createElement "script"
   script.type = "text/javascript"
   script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML.js" 
-  script.text = "MathJax.Hub.Config({'jax': ['output/CommonHTML']});"
+  script.text = "MathJax.Hub.Config({'jax': ['output/CommonHTML'], 
+                                     'CommonHTML': {'scale': 90}});"
   window.document.head.appendChild script 
 
 
