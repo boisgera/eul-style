@@ -22,28 +22,32 @@ parseArgs = require "minimist"
 
 
 
-defaults = ->
-  "*":
-    margin: 0
-    padding: 0
-    border: 0
-    boxSizing: "content-box" # "border-box" ? Study the transition (changes aspect)
-    fontSize: "100%"
-    font: "inherit"
-    verticalAlign: "baseline"
-  body:
-    lineHeight: 1
-  "ol, ul":
-    listStyle: "none"
-  "blockquote, q":
-    "quotes": "none"
-    ":before":
-      content: "none"
-    ":after":
-      content: "none"
-  table:
-    borderCollapse: "collapse"
-    borderSpacing: 0
+defaults =
+  css:
+    "*":
+      margin: 0
+      padding: 0
+      border: 0
+      boxSizing: "content-box" # "border-box" ? Study the transition (changes aspect)
+      fontSize: "100%"
+      font: "inherit"
+      verticalAlign: "baseline"
+    html:
+      lineHeight: 1
+    "ol, ul":
+      listStyle: "none"
+    "blockquote, q":
+      "quotes": "none"
+      ":before":
+        content: "none"
+      ":after":
+        content: "none"
+    table:
+      borderCollapse: "collapse"
+      borderSpacing: 0
+  html: ($) ->
+    undefined # detect before add
+    #$("head").append $("<meta charset='UTF-8'></meta>")
 
 # Colors
 color = "black"
@@ -70,7 +74,7 @@ typography =
       rel: "stylesheet"
       type: "text/css"
     $("head").append link
-  style:
+  css:
     html:
       fontSize: medium
       fontStyle: "normal"
@@ -107,13 +111,13 @@ layout = ->
 
 header = ->
   body:
-    "> header": # child of body is probably not appropriate ...
+    "> header, > .header, > #header": # child of body is probably not appropriate ...
                 # instead, search for "a top-level section" (main, article, 
                 # class="main", etc.) and select the headers that are children
                 # -- not descendants -- of these.
       #borderTop: "3px solid #000000"
       marginTop: 2.0 * lineHeight + "px" # not sure that's the right place.
-      marginBottom: lineHeight + "px"
+      marginBottom: 2.0 * lineHeight + "px"
       h1:
         fontSize: xLarge
         lineHeight: 1.5 * lineHeight + "px"
@@ -124,13 +128,16 @@ header = ->
         fontSize: medium
         lineHeight: lineHeight + "px"
 #        paddingTop: "1.5px" # makes the "true" baseline periodic (48 px)
-#        marginBottom: "-1.5px"
-        fontWeight: "bold"
+        marginBottom: 0.5 * lineHeight + "px"
+        fontWeight: "normal"
       ".date":
         fontFamily: '"Alegreya SC", serif'
         lineHeight: lineHeight + "px"
         fontSize: medium
         fontWeight: "normal"
+        marginBottom: 0.5 * lineHeight + "px"
+        float: "none" # it's a pain to have to put that here to counteract
+                      # the "float: left" used in "normal" h3 ...
 
 headings = ->
   h1:
@@ -166,6 +173,17 @@ links = ->
     ":visited":
       color: color
 
+lists = ->
+  li:
+    listStyle: "disc outside none"
+    marginLeft: 1 * lineHeight + "px"
+    paddingLeft: "0.5em"
+
+quote = ->
+  blockquote:
+    marginLeft: 1 * lineHeight + "px"
+    marginRight: 1 * lineHeight + "px"
+
 code = ->
   code:
     fontFamily: "Inconsolata"
@@ -177,21 +195,39 @@ code = ->
     paddingLeft: lineHeight + "px"
     paddingRight: lineHeight + "px"
     paddingTop : 1 * lineHeight + "px"
-    paddingBottom : 1 * lineHeight + "px"
+    paddingBottom : 1 * lineHeight
+
+mathjax = ($) ->
+  old = $("head script").filter (i, elt) -> 
+    src = $(elt).attr("src")
+    /mathjax/.test src
+  old.remove()
+  # DOM API instead of JQuery that adds weird script tags
+  script = window.document.createElement "script"
+  script.type = "text/javascript"
+  script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML.js" 
+  script.text = "MathJax.Hub.Config({'jax': ['output/CommonHTML']});"
+  window.document.head.appendChild script 
 
 
 absurdify = (api) ->
-    api.add defaults()
-    api.add typography.style
+    api.add defaults.css
+    api.add typography.css
     api.add layout()
     api.add header()
     api.add headings()
     api.add links()
+    api.add lists()
+    api.add quote()
     api.add code()
     api
 
-domify = ($) -> 
+domify = ($, options) ->
+  defaults.html($)
   typography.html($)
+  mathjax($) if $(".math").length
+
+  
 
 
 
@@ -334,6 +370,8 @@ domify = ($) ->
 
 # Commande-Line API
 # ------------------------------------------------------------------------------
+window = undefined
+
 main = ->
   argv = process.argv[2..]
   {h: h1, html: h2, s: s1, style: s2, _: inputHTMLFilenames} = parseArgs(argv)
@@ -361,6 +399,10 @@ main = ->
 
   # Transform the HTML (if any)
   if inputHTMLFilenames.length or HTMLFilename?
+    jsdom.defaultDocumentFeatures =
+      FetchExternalResources: false
+      ProcessExternalResources: off
+      SkipExternalResources: /.*/
     if inputHTMLFilenames.length
       # Load the original document
       html = fs.readFileSync inputHTMLFilenames[0], "utf-8"
@@ -396,6 +438,24 @@ main = ->
   else # no HTML in or out, output the stylesheet (if no CSS output file).
     if aboutCSS.inline?
       console.log aboutCSS.inline
-    
-main()
 
+main()
+# hangs in there for quite a while. Why ? Is it the mathjax stuff. 
+# Nah, can't be ... Arf, maybe: even when I get rid of the initial mathjax
+# in the doc, that could trigger some long interaction.
+#process.exit() # this is nasty: we stop the stuff so that mathjax can't load
+               # it's stuff & mutate the DOM ... this is fragile.
+               # could we do the opposite and let mathjax perform all the
+               # rendering (server-side ?).
+# rk: "Domini" apparently doesn't process script tags
+# Nota: we are gonna get in trouble with all the scripts that we may add
+#       that are going to get processed ... Think of it more.
+
+## Try:
+#require("jsdom").defaultDocumentFeatures = {
+#    FetchExternalResources: ["script"],
+#    ProcessExternalResources: false
+#};
+
+# The stuff is adding an extra MathJax-related script tag in head, evenwhen
+# I don't have any network on ... But at least it doesn't hang anymore.
