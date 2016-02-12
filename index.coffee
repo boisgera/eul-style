@@ -179,11 +179,16 @@ lists = ->
     marginLeft: 1 * lineHeight + "px"
     paddingLeft: "0.5em"
 
+# TODO: 
 quote = ->
   blockquote:
-    marginLeft: 1 * lineHeight + "px"
-    marginRight: 1 * lineHeight + "px"
+    border: "thick solid #ebebeb"
+    padding: 1 * lineHeight + "px"
+    marginBottom: 1 * lineHeight + "px"
+    "p:last-child":
+      marginBottom: "0px"
 
+# TODO: sliders if needed.
 code =
   html: ($) ->
     family = "Inconsolata:400,700"
@@ -206,18 +211,66 @@ code =
       paddingTop : 1 * lineHeight + "px"
       paddingBottom : 1 * lineHeight
 
-mathjax = ($) ->
-  old = $("head script").filter (i, elt) -> 
-    src = $(elt).attr("src")
-    /mathjax/.test src
-  old.remove()
-  # DOM API instead of JQuery that adds weird script tags
-  script = window.document.createElement "script"
-  script.type = "text/javascript"
-  script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML.js" 
-  script.text = "MathJax.Hub.Config({'jax': ['output/CommonHTML'], 
-                                     'CommonHTML': {'scale': 90}});"
-  window.document.head.appendChild script 
+image = 
+  css:
+    img:
+      width: "100%"
+      height: "auto"
+
+figure =
+  css:
+    figure:
+      marginBottom: lineHeight + "px"
+    figcaption:
+      fontStyle: "italic"
+      textAlign: "center"
+
+# TODO: sliders if needed.
+table =
+  html: ($) ->
+    $("table").wrap("<div class='table'></div>");
+  css:
+    ".table":
+      overflowX: "auto"
+      overflowY: "hidden"
+      width: "100%"
+      marginBottom: lineHeight + "px"
+    table:
+      padding: 0 # transfer in reset/defaults ?
+      marginLeft: "auto"
+      marginRight: "auto"
+      borderSpacing: "1em " + (lineHeight - base) + "px"
+      borderCollapse: "collapse"
+      borderTop: "medium solid black"
+      borderBottom: "medium solid black"
+    thead:
+      borderBottom: "medium solid black"
+    "td, th":
+      padding: 0.5*(lineHeight - base) + "px" + " 0.5em"
+
+
+math =
+  css:
+    ".math-display":
+      overflowX: "auto"
+      overflowY: "hidden"
+      width: "100%"
+      #marginBottom: lineHeight + "px"
+  html: ($) ->
+    # Mathjax header
+    old = $("head script").filter (i, elt) -> 
+      src = $(elt).attr("src")
+      /mathjax/.test src
+    old.remove()
+    # DOM API instead of JQuery that adds weird script tags
+    script = window.document.createElement "script"
+    script.type = "text/javascript"
+    script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML.js" 
+    script.text = "MathJax.Hub.Config({'jax': ['output/CommonHTML'], 
+                                       'CommonHTML': {'scale': 90}});"
+    window.document.head.appendChild script
+
+    $(".math.display").wrap("<div class='math-display'></div>");
 
 
 absurdify = (api) ->
@@ -230,13 +283,17 @@ absurdify = (api) ->
     api.add lists()
     api.add quote()
     api.add code.css
-    api
+    api.add image.css
+    api.add figure.css
+    api.add table.css
+    api.add math.css
 
 domify = ($, options) ->
   defaults.html($)
   typography.html($)
   code.html($)
-  mathjax($) if $(".math").length
+  table.html($)
+  math.html($) if $(".math").length
 
   
 
