@@ -2,25 +2,22 @@
 
 # Usage: 
 #
-#     $ css [--style=style.css] [--html=output.html] [input.html]`
+#     $ eul-style [--style=style.css] [--html=output.html] [input.html]`
 
-# Standard Node
+# Standard Node Lbrary
 fs = require "fs"
 process = require "process"
 
-# Third-Party 
-absurd = do -> # absurd.js fucks up with command-line args.
+# Third-Party Libraries
+absurd = do -> # workaround for absurd.js confused by command-line args.
   argv = process.argv
   process.argv = ["coffee"]
   absurd = require "absurd"
   process.argv = argv
   absurd
-
 jquery = require "jquery"
 jsdom = require "jsdom"
 parseArgs = require "minimist"
-
-
 
 defaults =
   css:
@@ -504,22 +501,4 @@ main = ->
       console.log aboutCSS.inline
 
 main()
-# hangs in there for quite a while. Why ? Is it the mathjax stuff. 
-# Nah, can't be ... Arf, maybe: even when I get rid of the initial mathjax
-# in the doc, that could trigger some long interaction.
-#process.exit() # this is nasty: we stop the stuff so that mathjax can't load
-               # it's stuff & mutate the DOM ... this is fragile.
-               # could we do the opposite and let mathjax perform all the
-               # rendering (server-side ?).
-# rk: "Domini" apparently doesn't process script tags
-# Nota: we are gonna get in trouble with all the scripts that we may add
-#       that are going to get processed ... Think of it more.
 
-## Try:
-#require("jsdom").defaultDocumentFeatures = {
-#    FetchExternalResources: ["script"],
-#    ProcessExternalResources: false
-#};
-
-# The stuff is adding an extra MathJax-related script tag in head, evenwhen
-# I don't have any network on ... But at least it doesn't hang anymore.
