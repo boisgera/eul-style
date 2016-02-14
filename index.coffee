@@ -2,7 +2,7 @@
 
 # Usage: 
 #
-#     $ coffee style.coffee [--style=style.css] [--html=output.html] [input.html]`
+#     $ css [--style=style.css] [--html=output.html] [input.html]`
 
 # Standard Node
 fs = require "fs"
@@ -294,10 +294,6 @@ domify = ($, options) ->
   code.html($)
   table.html($)
   math.html($) if $(".math").length
-
-  
-
-
 
 
 #layout()
