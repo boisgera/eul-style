@@ -176,6 +176,7 @@ footnotes =
   css:
     sup:
       verticalAlign: "super"
+      lineHeight: 0
 
 lists = ->
   li:
@@ -251,13 +252,15 @@ table =
     "td, th":
       padding: 0.5*(lineHeight - base) + "px" + " 0.5em"
 
+# TODO: need to implement the overflow without an extra "block" that would
+#       get the formula "out" of the current parapgraph and mess up spacing.
+
 math =
   css:
-    ".math-display":
+    ".MJXc-display":
       overflowX: "auto"
       overflowY: "hidden"
       width: "100%"
-      #marginBottom: lineHeight + "px"
   html: ($) ->
     # Mathjax header
     old = $("head script").filter (i, elt) -> 
@@ -270,8 +273,6 @@ math =
     script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML" 
     script.text = "MathJax.Hub.Config({jax: ['output/CommonHTML'], 'CommonHTML': {scale: 90}});"
     window.document.head.appendChild script
-
-    $(".math.display").wrap("<div class='math-display'></div>");
 
 fontAwesome = 
   html: ($) ->
