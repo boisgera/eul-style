@@ -180,11 +180,19 @@ footnotes =
 
 lists = ->
   li:
-    listStyle: "disc outside none"
-    marginLeft: 1 * lineHeight + "px"
-    paddingLeft: "0.5em"
+      listStyleType: "none"
+      listStyleImage: "none"
+      listStylePosition: "outside"
+      marginLeft: 1 * lineHeight + "px"
+      paddingLeft: "0.5em"    
+  ul:
+    li:
+      listStyle: "disc"
+  ol:
+    li:
+      listStyle: "decimal"
 
-# TODO: 
+# TODO: darker border, left only.
 quote = ->
   blockquote:
     border: "thick solid #ebebeb"
