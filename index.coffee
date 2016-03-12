@@ -91,6 +91,8 @@ typography =
         textAlign: "justify"
         hyphens: "auto"
         MozHyphens: "auto"
+      section:
+        marginBottom: lineHeight + "px"
       
 layout = ->
   html:
@@ -170,6 +172,11 @@ links = ->
     ":visited":
       color: color
 
+footnotes =
+  css:
+    sup:
+      verticalAlign: "super"
+
 lists = ->
   li:
     listStyle: "disc outside none"
@@ -222,7 +229,6 @@ figure =
       fontStyle: "italic"
       textAlign: "center"
 
-# TODO: sliders if needed.
 table =
   html: ($) ->
     $("table").wrap("<div class='table'></div>");
@@ -245,7 +251,6 @@ table =
     "td, th":
       padding: 0.5*(lineHeight - base) + "px" + " 0.5em"
 
-
 math =
   css:
     ".math-display":
@@ -262,13 +267,18 @@ math =
     # DOM API instead of JQuery that adds weird script tags
     script = window.document.createElement "script"
     script.type = "text/javascript"
-    script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML.js" 
-    script.text = "MathJax.Hub.Config({'jax': ['output/CommonHTML'], 
-                                       'CommonHTML': {'scale': 90}});"
+    script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML" 
+    script.text = "MathJax.Hub.Config({jax: ['output/CommonHTML'], 'CommonHTML': {scale: 90}});"
     window.document.head.appendChild script
 
     $(".math.display").wrap("<div class='math-display'></div>");
 
+fontAwesome = 
+  html: ($) ->
+    link = $ "<link>",
+      rel: "stylesheet"
+      href: "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
+    $("head").append link
 
 absurdify = (api) ->
     api.add defaults.css
@@ -277,6 +287,7 @@ absurdify = (api) ->
     api.add header()
     api.add headings()
     api.add links()
+    api.add footnotes.css
     api.add lists()
     api.add quote()
     api.add code.css
@@ -291,6 +302,7 @@ domify = ($, options) ->
   code.html($)
   table.html($)
   math.html($) if $(".math").length
+  fontAwesome.html($) if $(".fa").length
 
 
 #layout()
