@@ -96,7 +96,7 @@ typography =
       
 layout = ->
   html:
-    body: # pfff not body (adapt pandoc build to have another top-level component.
+    "main, .main": # pfff not body (adapt pandoc build to have another top-level component.
           # the easiest thing to do is probably to have a "main" class, it's
           # flexible wrt the actual tag soup ...)
 
@@ -109,7 +109,7 @@ layout = ->
       padding: lineHeight + "px" # use rems instead (1.5rem)?
 
 header = ->
-  body:
+  "main, .main":
     "> header, > .header, > #header": # child of body is probably not appropriate ...
                 # instead, search for "a top-level section" (main, article, 
                 # class="main", etc.) and select the headers that are children
@@ -195,7 +195,10 @@ lists = ->
 # TODO: darker border, left only.
 quote = ->
   blockquote:
-    border: "thick solid #ebebeb"
+    borderLeftWidth: "thick"
+    borderLeftStyle: "solid"
+    borderLeftColor: "black"
+    #border: "thick solid #ebebeb"
     padding: 1 * lineHeight + "px"
     marginBottom: 1 * lineHeight + "px"
     "p:last-child":
