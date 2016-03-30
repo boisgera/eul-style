@@ -96,7 +96,7 @@ typography =
       
 layout = ->
   html:
-    "main, .main": # pfff not body (adapt pandoc build to have another top-level component.
+    "main": # pfff not body (adapt pandoc build to have another top-level component.
           # the easiest thing to do is probably to have a "main" class, it's
           # flexible wrt the actual tag soup ...)
 
@@ -108,8 +108,42 @@ layout = ->
       margin: "auto"
       padding: lineHeight + "px" # use rems instead (1.5rem)?
 
+#toc =
+#  html: ($) ->
+#    $("body").prepend("<nav class='toc'></nav>")
+#  
+#  css:
+#    ".toc":
+#      position: "absolute"
+#      left: "0"
+#      width: "0"
+#    "main":
+#      marginLeft: "20%"
+
+toc = 
+  html: ($) ->
+    toc = $("nav#TOC")
+    if toc.length
+      section = $("<section id='contents' class='level1' ></section>")
+      section.append($("<h1><a href='#contents'>Contents</a></h1>"))
+      section.append(toc.clone())
+      toc.replaceWith(section)
+  css:
+     "nav#TOC > ul":
+       fontWeight: "bold"
+       "> *":
+         marginBottom: lineHeight + "px"
+       li:
+         listStyleType: "none"
+         marginLeft: 0
+         paddingLeft: 0
+       ul:
+         li: 
+           marginLeft: lineHeight + "px"
+         fontWeight: "normal"
+
 header = ->
-  "main, .main":
+  "main":
     "> header, > .header, > #header": # child of body is probably not appropriate ...
                 # instead, search for "a top-level section" (main, article, 
                 # class="main", etc.) and select the headers that are children
@@ -307,6 +341,7 @@ absurdify = (api) ->
     api.add figure.css
     api.add table.css
     api.add math.css
+    api.add toc.css
 
 domify = ($, options) ->
   defaults.html($)
@@ -315,6 +350,7 @@ domify = ($, options) ->
   table.html($)
   math.html($) if $(".math").length
   fontAwesome.html($) if $(".fa").length
+  toc.html($)
 
 
 #layout()
