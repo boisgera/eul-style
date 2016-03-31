@@ -142,6 +142,18 @@ toc =
            marginLeft: lineHeight + "px"
          fontWeight: "normal"
 
+notes =
+  html: ($) ->
+    notes = $("section.footnotes")
+    notes.attr(id: "notes")
+    if notes.length
+      notes.prepend $("<h1><a href='#notes'>Notes</a></h1>")
+    toc = $("nav#TOC")
+    if toc.length
+      toc.children().first().append $("<li><a href='#notes'>Notes</a></li>")
+
+  css: {}
+
 header = ->
   "main":
     "> header, > .header, > #header": # child of body is probably not appropriate ...
@@ -342,6 +354,7 @@ absurdify = (api) ->
     api.add table.css
     api.add math.css
     api.add toc.css
+    api.add notes.css
 
 domify = ($, options) ->
   defaults.html($)
@@ -351,6 +364,7 @@ domify = ($, options) ->
   math.html($) if $(".math").length
   fontAwesome.html($) if $(".fa").length
   toc.html($)
+  notes.html($)
 
 
 #layout()
