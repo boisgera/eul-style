@@ -121,18 +121,46 @@ layout = ->
 
 
 # TODO: 
+#   - solve bugs with duplicated entries in TOC. .......................... DONE
+#     That's related to how pandoc generates TOC entries for headings that
+#     contain links :(. It generate nested links, which is not kosher.
+#     Correct this at the eul-link level ? Hope that the nested anchors are
+#     still accessible as such (not already corrected) and "disable" the
+#     inner link? Otherwise ... find another plan ... Detect multiple
+#     anchors (in childrens of li's) and patch the result.
+#
 #   - caret / arrow stuff (inactive for now)
+#
 #   - add SC Light Section + number on top of top-level heading
+#
 #   - rule between top-level sections
+#
 #   - control spacing.
+
+sanitize = ($, elt) -> # fix the nested anchor problem in TOCs.
+  # (this is illegal, the DOM automatically closes the first anchor when
+  # the second one comes.
+  # Quick & dirty fix: if the elt starts with two anchors, 
+  # remove the first one.
+  children = elt.children()
+  if children.length >= 2
+    first = children[0]
+    second = children[1]
+    if first.tagName is "A" and second.tagName is "A"
+      $(first).remove()
+
 toc = 
   html: ($) ->
     toc = $("nav#TOC")
     if toc.length
+
+      toc.find("li").each -> sanitize($, $(this))
+
       section = $("<section id='contents' class='level1' ></section>")
       section.append($("<h1><a href='#contents'>Contents</a></h1>"))
       section.append(toc.clone())
       toc.replaceWith(section)
+
   css:
      "nav#TOC > ul":
        fontWeight: "bold"
@@ -344,22 +372,22 @@ fontAwesome =
     $("head").append link
 
 absurdify = (api) ->
-    api.add defaults.css
-    api.add typography.css
-    api.add layout()
-    api.add header()
-    api.add headings()
-    api.add links()
-    api.add footnotes.css
-    api.add lists()
-    api.add quote()
-    api.add code.css
-    api.add image.css
-    api.add figure.css
-    api.add table.css
-    api.add math.css
-    api.add toc.css
-    api.add notes.css
+  api.add defaults.css
+  api.add typography.css
+  api.add layout()
+  api.add header()
+  api.add headings()
+  api.add links()
+  api.add footnotes.css
+  api.add lists()
+  api.add quote()
+  api.add code.css
+  api.add image.css
+  api.add figure.css
+  api.add table.css
+  api.add math.css
+  api.add toc.css
+  api.add notes.css
 
 domify = ($, options) ->
   defaults.html($)
