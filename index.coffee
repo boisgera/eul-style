@@ -49,7 +49,6 @@ defaults =
 # Colors
 color = "black"
 
-
 # Typography
 
 # TODO: bring code typo here ? That would make sense. Defines font families too.
@@ -120,6 +119,12 @@ layout = ->
 #    "main":
 #      marginLeft: "20%"
 
+
+# TODO: 
+#   - caret / arrow stuff (inactive for now)
+#   - add SC Light Section + number on top of top-level heading
+#   - rule between top-level sections
+#   - control spacing.
 toc = 
   html: ($) ->
     toc = $("nav#TOC")
@@ -148,9 +153,9 @@ notes =
     notes.attr(id: "notes")
     if notes.length
       notes.prepend $("<h1><a href='#notes'>Notes</a></h1>")
-    toc = $("nav#TOC")
-    if toc.length
-      toc.children().first().append $("<li><a href='#notes'>Notes</a></li>")
+      toc = $("nav#TOC")
+      if toc.length
+        toc.children().first().append $("<li><a href='#notes'>Notes</a></li>")
 
   css: {}
 
