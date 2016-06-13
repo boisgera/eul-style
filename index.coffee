@@ -64,7 +64,7 @@ xLarge = Math.round(base * ratio * ratio) + "px"
 
 typography =
   html: ($) -> # TODO: check that the link is not already here ?
-    family = "Alegreya:400,400italic,700,700italic|Alegreya+SC:400,400italic,700,700italic"
+    family = "Alegreya+Sans:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,800,800italic,900,900italic|Alegreya+Sans+SC:400,100,300,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic|Alegreya+SC:400,400italic,700,700italic,900,900italic|Alegreya:400,700,900,400italic,700italic,900italic"
     link = $ "<link>",
       href: "https://fonts.googleapis.com/css?family=#{family}"
       rel: "stylesheet"
@@ -129,6 +129,14 @@ layout = ->
 #     inner link? Otherwise ... find another plan ... Detect multiple
 #     anchors (in childrens of li's) and patch the result.
 #
+#   - offset a little (downward) the "Section ???" flag.
+#
+#   - solve space that is too wide at the end of the TOC.
+#
+#   - analyze tagged contents, substitute labels.
+#
+#   - adjust indents
+#
 #   - caret / arrow stuff (inactive for now)
 #
 #   - add SC Light Section + number on top of top-level heading
@@ -153,37 +161,51 @@ toc =
   html: ($) ->
     toc = $("nav#TOC")
     if toc.length
-
       toc.find("li").each -> sanitize($, $(this))
-
+      top_lis = toc.children("ul").children("li")
+      top_lis.addClass "top-li"
+      #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
+      #top_lis.children("i").after(" ")
+      for li, n in top_lis
+        $(li).prepend("<p class='section-flag'>section #{n + 1}</p>")
       section = $("<section id='contents' class='level1' ></section>")
       section.append($("<h1><a href='#contents'>Contents</a></h1>"))
       section.append(toc.clone())
       toc.replaceWith(section)
 
   css:
-     "nav#TOC > ul":
-       fontWeight: "bold"
-       "> *":
-         marginBottom: lineHeight + "px"
-       li:
-         listStyleType: "none"
-         marginLeft: 0
-         paddingLeft: 0
-       ul:
-         li: 
-           marginLeft: lineHeight + "px"
-         fontWeight: "normal"
-
+    "nav#TOC > ul":
+      fontWeight: "bold"
+      "> *":
+        marginBottom: lineHeight + "px"
+      li:
+        listStyleType: "none"
+        marginLeft: 0
+        paddingLeft: 0
+      ul:
+        li: 
+          marginLeft: lineHeight + "px"
+          fontWeight: "normal"
+    ".section-flag": # TODO: shift a bit down.
+      lineHeight: lineHeight + "px"
+      fontSize: small
+      fontWeight: "300"
+      fontFamily: "Alegreya Sans SC"
+      marginBottom: 0
+    "nav#TOC > ul > li.top-li":
+      marginBottom: 0
+      paddingBottom: lineHeight
+      borderWidth: "2px 0 0 0"
+      borderStyle: "solid"
 notes =
   html: ($) ->
     notes = $("section.footnotes")
     notes.attr(id: "notes")
     if notes.length
       notes.prepend $("<h1><a href='#notes'>Notes</a></h1>")
-      toc = $("nav#TOC")
-      if toc.length
-        toc.children().first().append $("<li><a href='#notes'>Notes</a></li>")
+      toc_ = $("nav#TOC")
+      if toc_.length
+        toc_.children().first().append $("<li><a href='#notes'>Notes</a></li>")
 
   css: {}
 
@@ -395,9 +417,10 @@ domify = ($, options) ->
   code.html($)
   table.html($)
   math.html($) if $(".math").length
-  fontAwesome.html($) if $(".fa").length
-  toc.html($)
   notes.html($)
+  toc.html($)
+  fontAwesome.html($)
+
 
 
 #layout()
