@@ -19,6 +19,22 @@ jquery = require "jquery"
 jsdom = require "jsdom"
 parseArgs = require "minimist"
 
+# Javascript Helpers
+# ------------------------------------------------------------------------------
+type = (item) ->
+  Object::toString.call(item)[8...-1].toLowerCase()
+
+String::capitalize = ->
+    this.charAt(0).toUpperCase() + this.slice(1)
+
+String::decapitalize = ->
+    this.charAt(0).toLowerCase() + this.slice(1)
+
+String::startsWith = (string) ->
+    this[...string.length] is string
+
+
+
 defaults =
   css:
     "*":
@@ -132,8 +148,20 @@ layout = ->
 #   - offset a little (downward) the "Section ???" flag.
 #
 #   - solve space that is too wide at the end of the TOC.
+#     adapt by converting the last padding into a margin,
+#     that should collapse with the following header margin.
+#     Mmmmmm .... will look like shit if I have to change the
+#     background color ... add some solid top border instead?
+#     Why the fuck is it not already there?
+#     Because I am putting it on the top. Add a bottom stuff
+#     for the last element too.
 #
 #   - analyze tagged contents, substitute labels.
+#
+#   - organize tags ? Group by kind ? Associate proofs with the statement?
+#
+#   - section / toc for figures (what title ?). Title starts the caption
+#     and is bold (whenever it exists)?
 #
 #   - adjust indents
 #
@@ -144,6 +172,8 @@ layout = ->
 #   - rule between top-level sections
 #
 #   - control spacing.
+#
+#   - TODO: align badges properly, try some color schemes ? (grey first)?
 
 sanitize = ($, elt) -> # fix the nested anchor problem in TOCs.
   # (this is illegal, the DOM automatically closes the first anchor when
@@ -157,6 +187,10 @@ sanitize = ($, elt) -> # fix the nested anchor problem in TOCs.
     if first.tagName is "A" and second.tagName is "A"
       $(first).remove()
 
+badge = ($, label) ->
+  label = label[...3].toLowerCase()
+  $("<span class='badge'>#{label}<span>")
+
 toc = 
   html: ($) ->
     toc = $("nav#TOC")
@@ -164,6 +198,22 @@ toc =
       toc.find("li").each -> sanitize($, $(this))
       top_lis = toc.children("ul").children("li")
       top_lis.addClass "top-li"
+
+      emDash = "–"
+      section_types = "Theorem Lemma Corollary Definition Remark Example".split(" ")
+      anchors = toc.find("a")
+      for anchor in anchors
+          text = $(anchor).text()
+          if text.startsWith("Proof")
+            $(anchor).remove()
+          [section_type, title] = (item.trim() for item in text.split(emDash))
+          if section_type in section_types
+              span = badge($, section_type)[0].outerHTML
+              if title.length
+                if title[title.length-1] is "."
+                    title = title[...-1]
+              $(anchor).html(span + " " + title)
+              
       #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
       #top_lis.children("i").after(" ")
       for li, n in top_lis
@@ -175,6 +225,7 @@ toc =
 
   css:
     "nav#TOC > ul":
+      position: "relative"
       fontWeight: "bold"
       "> *":
         marginBottom: lineHeight + "px"
@@ -197,6 +248,28 @@ toc =
       paddingBottom: lineHeight
       borderWidth: "2px 0 0 0"
       borderStyle: "solid"
+    "nav#TOC > ul > li.top-li:last-child":
+      borderWidth: "2px 0 2px 0"
+    "nav#TOC .badge":
+      position: "relative"
+      bottom: "0.13em"
+      fontFamily: "Alegreya Sans SC"
+      fontWeight: "300"
+      fontSize: small
+      display: "inline-block"
+      lineHeight: "1.2em"
+      height: "1.2em"
+      width: "2em"
+      textAlign: "center"
+      #borderStyle: "solid"
+      #borderWidth: "1px"
+      borderRadius: "2px"
+      backgroundColor: "#f0f0f0"
+      verticalAlign: "baseline"
+      marginRight: "0.5em"
+#      ":hover":
+#        background: "#fff0f0"
+
 notes =
   html: ($) ->
     notes = $("section.footnotes")
