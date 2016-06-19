@@ -187,6 +187,27 @@ sanitize = ($, elt) -> # fix the nested anchor problem in TOCs.
     if first.tagName is "A" and second.tagName is "A"
       $(first).remove()
 
+trim_period = (text) -> 
+  if text[text.length-1] is "." and text[text.length-2] isnt "."
+    text = text[...-1]
+  return text
+
+split_types_text = (text) ->
+  section_types = "Theorem Lemma Proposition Corollary Definition Remark Example Examples".split(" ")
+  separators = "–&,"
+  pattern = "(" + (s for s in separators).join("|") + ")" 
+  sep_regexp = new RegExp(pattern)
+  parts = text.split(sep_regexp)
+  types = []
+  while parts.length
+    if parts[0].trim() in section_types
+      types.push parts.shift().trim()
+      parts.shift() # remove the separator
+    else
+      break
+  text = parts.join("")
+  return [types, text]
+      
 badge = ($, label) ->
   label = label[...3].toLowerCase()
   $("<span class='badge'>#{label}<span>")
@@ -199,20 +220,16 @@ toc =
       top_lis = toc.children("ul").children("li")
       top_lis.addClass "top-li"
 
-      emDash = "–"
-      section_types = "Theorem Lemma Corollary Definition Remark Example".split(" ")
       anchors = toc.find("a")
       for anchor in anchors
           text = $(anchor).text()
           if text.startsWith("Proof")
             $(anchor).remove()
-          [section_type, title] = (item.trim() for item in text.split(emDash))
-          if section_type in section_types
-              span = badge($, section_type)[0].outerHTML
-              if title.length
-                if title[title.length-1] is "."
-                    title = title[...-1]
-              $(anchor).html(span + " " + title)
+          [types, text] = split_types_text trim_period text
+          if types.length
+              $(anchor).html(text or "(Untitled)")
+              #$(anchor).parent().append(badge($, t)) for t in types
+              $(anchor).parent().prepend(badge($, t)) for t in types.reverse()
               
       #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
       #top_lis.children("i").after(" ")
@@ -266,7 +283,9 @@ toc =
       borderRadius: "2px"
       backgroundColor: "#f0f0f0"
       verticalAlign: "baseline"
-      marginRight: "0.5em"
+      boxShadow: "0px 1.0px 1.0px #aaa"
+      marginRight: "1em"
+      #marginLeft: "1em"
 #      ":hover":
 #        background: "#fff0f0"
 
