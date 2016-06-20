@@ -193,7 +193,9 @@ trim_period = (text) ->
   return text
 
 split_types_text = (text) ->
-  section_types = "Theorem Lemma Proposition Corollary Definition Remark Example Examples".split(" ")
+  section_types = "Theorem Lemma Proposition Corollary 
+    Definition Remark Example Examples 
+    Question Questions Answer Answers".split(" ")
   separators = "–&,"
   pattern = "(" + (s for s in separators).join("|") + ")" 
   sep_regexp = new RegExp(pattern)
@@ -225,10 +227,14 @@ toc =
           text = $(anchor).text()
           if text.startsWith("Proof")
             $(anchor).remove()
-          [types, text] = split_types_text trim_period text
+          text = trim_period text
+          [types, subtext] = split_types_text text
           if types.length
-              $(anchor).html(text or "(Untitled)")
+              $(anchor).html(subtext or text)
               #$(anchor).parent().append(badge($, t)) for t in types
+
+              # TODO: stack multiple badges (use z-index).
+
               $(anchor).parent().prepend(badge($, t)) for t in types.reverse()
               
       #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
@@ -331,27 +337,34 @@ header = ->
         float: "none" # it's a pain to have to put that here to counteract
                       # the "float: left" used in "normal" h3 ...
 
-headings = ->
-  h1:
-    fontSize: large
-    fontWeight: "bold"
-    lineHeight: 1.25 * lineHeight + "px"
-    marginTop: 2.0 * lineHeight + "px"
-    marginBottom: 0.75 * lineHeight + "px"
-  h2:
-    fontSize: medium
-    fontWeight: "bold"
-    lineHeight: lineHeight + "px"
-#    marginTop: 1.0 * lineHeight + "px"
-    marginBottom: 0.5 * lineHeight + "px"
+headings =
+  css:
+    h1:
+      fontSize: large
+      fontWeight: "bold"
+      lineHeight: 1.25 * lineHeight + "px"
+      marginTop: 2.0 * lineHeight + "px"
+      marginBottom: 0.75 * lineHeight + "px"
+    h2:
+      fontSize: medium
+      fontWeight: "bold"
+      lineHeight: lineHeight + "px"
+  #    marginTop: 1.0 * lineHeight + "px"
+      marginBottom: 0.5 * lineHeight + "px"
 
-  "h3, h4, h5, h6":
-    fontSize: medium
-    fontWeight: "bold"
-    float: "left"
-    marginRight: "1em"
-#    marginTop: "0px"
-#    marginBottom: "0px"
+    "h3, h4, h5, h6":
+      fontSize: medium
+      fontWeight: "bold"
+      float: "left"
+      marginRight: "1em"
+  #    marginTop: "0px"
+  #    marginBottom: "0px"
+  html: ($) ->
+    subsubheadings = $("h3, h4, h5, h6")
+    for heading in subsubheadings
+      if $(heading).next().is("ul, ol")
+          $("<br>").insertAfter($(heading)) 
+
 
 links = ->
   a:
@@ -490,7 +503,7 @@ absurdify = (api) ->
   api.add typography.css
   api.add layout()
   api.add header()
-  api.add headings()
+  api.add headings.css
   api.add links()
   api.add footnotes.css
   api.add lists()
@@ -506,6 +519,7 @@ absurdify = (api) ->
 domify = ($, options) ->
   defaults.html($)
   typography.html($)
+  headings.html($)
   code.html($)
   table.html($)
   math.html($) if $(".math").length
