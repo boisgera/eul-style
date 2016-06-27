@@ -337,6 +337,9 @@ header = ->
         float: "none" # it's a pain to have to put that here to counteract
                       # the "float: left" used in "normal" h3 ...
 
+# TODO: remove the float: left; instead turn the heading inline and insert it
+#       into the next paragraph (if any).
+
 headings =
   css:
     h1:
