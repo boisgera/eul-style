@@ -64,10 +64,8 @@ String::startsWith = (string) ->
 # ------------------------------------------------------------------------------
 
 insert_script = (options) ->
-
-    console.warn "INSERT", options
-
     # Use DOM API instead of JQuery that adds weird script tags
+    # (the Node DOM actually tries to interpret the script AFAICT ...)
     script = window.document.createElement "script"
     script.type = "text/javascript"
     if options.src?
@@ -75,6 +73,7 @@ insert_script = (options) ->
     if options.text? 
       script.text = options.text
     window.document.head.appendChild script
+
 
 # Style
 # ------------------------------------------------------------------------------
@@ -151,19 +150,20 @@ typography =
       section:
         marginBottom: lineHeight + "px"
       
-layout = ->
-  html:
-    "main": # pfff not body (adapt pandoc build to have another top-level component.
-          # the easiest thing to do is probably to have a "main" class, it's
-          # flexible wrt the actual tag soup ...)
+layout =
+  css:
+    html:
+      "main": # pfff not body (adapt pandoc build to have another top-level component.
+            # the easiest thing to do is probably to have a "main" class, it's
+            # flexible wrt the actual tag soup ...)
 
-      # Nota: this is probably the only place where we want content-box model,
-      #       so define border-box in defaults to everything.
+        # Nota: this is probably the only place where we want content-box model,
+        #       so define border-box in defaults to everything.
 
-      boxSizing: "content-box" # check this ... check that 32 em applies to
-      maxWidth: "32em"         # the text WITHOUT the padding.
-      margin: "auto"
-      padding: lineHeight + "px" # use rems instead (1.5rem)?
+        boxSizing: "content-box" # check this ... check that 32 em applies to
+        maxWidth: "32em"         # the text WITHOUT the padding.
+        margin: "auto"
+        padding: lineHeight + "px" # use rems instead (1.5rem)?
 
 #toc =
 #  html: ->
@@ -252,7 +252,7 @@ split_types_text = (text) ->
   text = parts.join("")
   return [types, text]
       
-badge = ($, label) ->
+badge = (label) ->
   label = label[...3].toLowerCase()
   $("<span class='badge'>#{label}<span>")
 
@@ -277,7 +277,7 @@ toc =
 
               # TODO: stack multiple badges (use z-index).
 
-              $(anchor).parent().prepend(badge($, t)) for t in types.reverse()
+              $(anchor).parent().prepend(badge(t)) for t in types.reverse()
               
       #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
       #top_lis.children("i").after(" ")
@@ -349,40 +349,41 @@ notes =
 
   css: {}
 
-header = ->
-  "main":
-    "> header, > .header, > #header": # child of body is probably not appropriate ...
-                # instead, search for "a top-level section" (main, article, 
-                # class="main", etc.) and select the headers that are children
-                # -- not descendants -- of these.
-      #borderTop: "3px solid #000000"
-      marginTop: 2.0 * lineHeight + "px" # not sure that's the right place.
-      marginBottom: 2.0 * lineHeight + "px"
-      h1:
-        fontSize: xLarge
-        lineHeight: 1.5 * lineHeight + "px"
-        marginTop: 0.0 * lineHeight + "px" # compensate somewhere else, here
-        marginBottom: lineHeight + "px"    # is not the place.
-        fontWeight: "bold"
-      ".author":
-        fontSize: medium
-        lineHeight: lineHeight + "px"
-#        paddingTop: "1.5px" # makes the "true" baseline periodic (48 px)
-        marginBottom: 0.5 * lineHeight + "px"
-        fontWeight: "normal"
-      ".date":
-        fontFamily: '"Alegreya SC", serif'
-        lineHeight: lineHeight + "px"
-        fontSize: medium
-        fontWeight: "normal"
-        marginBottom: 0.5 * lineHeight + "px"
-        float: "none" # it's a pain to have to put that here to counteract
-                      # the "float: left" used in "normal" h3 ...
-                      # OTOH, this date and author stuff probably shouldn't
-                      # be separate headings ...
+header =
+  css:
+    main:
+      "> header, > .header, > #header": # child of body is probably not appropriate ...
+                  # instead, search for "a top-level section" (main, article, 
+                  # class="main", etc.) and select the headers that are children
+                  # -- not descendants -- of these.
+        #borderTop: "3px solid #000000"
+        marginTop: 2.0 * lineHeight + "px" # not sure that's the right place.
+        marginBottom: 2.0 * lineHeight + "px"
+        h1:
+          fontSize: xLarge
+          lineHeight: 1.5 * lineHeight + "px"
+          marginTop: 0.0 * lineHeight + "px" # compensate somewhere else, here
+          marginBottom: lineHeight + "px"    # is not the place.
+          fontWeight: "bold"
+        ".author":
+          fontSize: medium
+          lineHeight: lineHeight + "px"
+  #        paddingTop: "1.5px" # makes the "true" baseline periodic (48 px)
+          marginBottom: 0.5 * lineHeight + "px"
+          fontWeight: "normal"
+        ".date":
+          fontFamily: '"Alegreya SC", serif'
+          lineHeight: lineHeight + "px"
+          fontSize: medium
+          fontWeight: "normal"
+          marginBottom: 0.5 * lineHeight + "px"
+          float: "none" # it's a pain to have to put that here to counteract
+                        # the "float: left" used in "normal" h3 ...
+                        # OTOH, this date and author stuff probably shouldn't
+                        # be separate headings ...
 
-# TODO: remove the float: left; instead turn the heading inline and insert it
-#       into the next paragraph (if any).
+  # TODO: remove the float: left; instead turn the heading inline and insert it
+  #       into the next paragraph (if any).
 
 headings =
   css:
@@ -415,17 +416,18 @@ headings =
           $("<br>").insertAfter($(heading)) 
 
 
-links = ->
-  a:
-    cursor: "pointer"
-    textDecoration: "none"
-    outline: 0
-    ":hover":
+links =
+  css:
+    a:
+      cursor: "pointer"
       textDecoration: "none"
-    ":link":
-      color: color
-    ":visited":
-      color: color
+      outline: 0
+      ":hover":
+        textDecoration: "none"
+      ":link":
+        color: color
+      ":visited":
+        color: color
 
 footnotes =
   css:
@@ -433,29 +435,31 @@ footnotes =
       verticalAlign: "super"
       lineHeight: 0
 
-lists = ->
-  li:
-      listStyleType: "none"
-      listStyleImage: "none"
-      listStylePosition: "outside"
-      marginLeft: 1 * lineHeight + "px"
-      paddingLeft: "0.5em"    
-  ul:
+lists =
+  css:
     li:
-      listStyle: "disc"
-  ol:
-    li:
-      listStyle: "decimal"
+        listStyleType: "none"
+        listStyleImage: "none"
+        listStylePosition: "outside"
+        marginLeft: 1 * lineHeight + "px"
+        paddingLeft: "0.5em"    
+    ul:
+      li:
+        listStyle: "disc"
+    ol:
+      li:
+        listStyle: "decimal"
 
-quote = ->
-  blockquote:
-    borderLeftWidth: "thick"
-    borderLeftStyle: "solid"
-    borderLeftColor: "black"
-    padding: 1 * lineHeight + "px"
-    marginBottom: 1 * lineHeight + "px"
-    "p:last-child":
-      marginBottom: "0px"
+quote =
+  css:
+    blockquote:
+      borderLeftWidth: "thick"
+      borderLeftStyle: "solid"
+      borderLeftColor: "black"
+      padding: 1 * lineHeight + "px"
+      marginBottom: 1 * lineHeight + "px"
+      "p:last-child":
+        marginBottom: "0px"
 
 code =
   html: ->
@@ -517,7 +521,7 @@ table =
 # TODO: need to implement the overflow without an extra "block" that would
 #       get the formula "out" of the current parapgraph and mess up spacing.
 
-math =
+math = # if $(".math").length guard ? "force" option?
   css:
     ".MJXc-display":
       overflowX: "auto"
@@ -529,12 +533,9 @@ math =
       src = $(elt).attr("src")
       /mathjax/.test src
     old.remove()
-    # DOM API instead of JQuery that adds weird script tags
-    script = window.document.createElement "script"
-    script.type = "text/javascript"
-    script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML" 
-    script.text = "MathJax.Hub.Config({jax: ['output/CommonHTML'], 'CommonHTML': {scale: 90}});"
-    window.document.head.appendChild script
+    insert_script
+      src: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML" 
+      text: "MathJax.Hub.Config({jax: ['output/CommonHTML'], 'CommonHTML': {scale: 90}});"
 
 fontAwesome = 
   html: ->
@@ -555,44 +556,29 @@ demo =
 
 # TODO: reduce code duplication here; components should be registered once.
 
-absurdify = (api) ->
-  api.add defaults.css
-  api.add typography.css
-  api.add layout()
-  api.add header()
-  api.add headings.css
-  api.add links()
-  api.add footnotes.css
-  api.add lists()
-  api.add quote()
-  api.add code.css
-  api.add image.css
-  api.add figure.css
-  api.add table.css
-  api.add math.css
-  api.add notes.css
-  api.add toc.css
+elts = [defaults, typography, layout, header, headings, links, footnotes, 
+        lists, quote, code, image, figure, table, math, notes, toc, 
+        fontAwesome, jQuery, demo]
 
-domify = (options) ->
-  defaults.html()
-  typography.html()
-  headings.html()
-  code.html()
-  table.html()
-  math.html() if $(".math").length
-  notes.html()
-  toc.html()
-  fontAwesome.html()
-  jQuery.html()
+absurdify = (api) ->
+  for elt in elts
+    if elt.css?
+      css = elt.css
+      if type(css) is "function"
+        css = css()
+      api.add css
+      
+domify = () ->
+  for elt in elts
+    if elt.html?
+      elt.html()
 
 scriptify = () ->
-  elts = [demo]
   for elt in elts
-    jsPath = path.join(__dirname, elt.js)
-    console.warn path.extname(jsPath)
-    console.warn "jsPath", jsPath
-    text = fs.readFileSync jsPath, "utf8"
-    insert_script text: text
+    if elt.js?
+      jsPath = path.join(__dirname, elt.js)
+      text = fs.readFileSync jsPath, "utf8"
+      insert_script text: text
 
 # Commande-Line API
 # ------------------------------------------------------------------------------
