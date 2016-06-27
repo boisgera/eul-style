@@ -336,6 +336,8 @@ header = ->
         marginBottom: 0.5 * lineHeight + "px"
         float: "none" # it's a pain to have to put that here to counteract
                       # the "float: left" used in "normal" h3 ...
+                      # OTOH, this date and author stuff probably shouldn't
+                      # be separate headings ...
 
 # TODO: remove the float: left; instead turn the heading inline and insert it
 #       into the next paragraph (if any).
