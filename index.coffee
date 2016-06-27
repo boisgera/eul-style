@@ -4,12 +4,16 @@
 #
 #     $ eul-style [--style=style.css] [--html=output.html] [input.html]`
 
-# Standard Node Lbrary
+
+# Requirements
+# ------------------------------------------------------------------------------
+
+# Standard Node Library
 fs = require "fs"
 process = require "process"
 
 # Third-Party Libraries
-absurd = do -> # workaround for absurd.js confused by command-line args.
+absurd = do -> # workaround for absurd.js (confused by command-line args).
   argv = process.argv
   process.argv = ["coffee"]
   absurd = require "absurd"
@@ -18,6 +22,7 @@ absurd = do -> # workaround for absurd.js confused by command-line args.
 jquery = require "jquery"
 jsdom = require "jsdom"
 parseArgs = require "minimist"
+
 
 # Javascript Helpers
 # ------------------------------------------------------------------------------
@@ -34,6 +39,8 @@ String::startsWith = (string) ->
     this[...string.length] is string
 
 
+# Style
+# ------------------------------------------------------------------------------
 
 defaults =
   css:
@@ -58,7 +65,7 @@ defaults =
     table:
       borderCollapse: "collapse"
       borderSpacing: 0
-  html: ($) ->
+  html: ->
     undefined # detect before add
     #$("head").append $("<meta charset='UTF-8'></meta>")
 
@@ -79,7 +86,7 @@ large  = Math.round(base * ratio) + "px"
 xLarge = Math.round(base * ratio * ratio) + "px"
 
 typography =
-  html: ($) -> # TODO: check that the link is not already here ?
+  html: -> # TODO: check that the link is not already here ?
     family = "Alegreya+Sans:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,800,800italic,900,900italic|Alegreya+Sans+SC:400,100,300,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic|Alegreya+SC:400,400italic,700,700italic,900,900italic|Alegreya:400,700,900,400italic,700italic,900italic"
     link = $ "<link>",
       href: "https://fonts.googleapis.com/css?family=#{family}"
@@ -122,7 +129,7 @@ layout = ->
       padding: lineHeight + "px" # use rems instead (1.5rem)?
 
 #toc =
-#  html: ($) ->
+#  html: ->
 #    $("body").prepend("<nav class='toc'></nav>")
 #  
 #  css:
@@ -213,7 +220,7 @@ badge = ($, label) ->
   $("<span class='badge'>#{label}<span>")
 
 toc = 
-  html: ($) ->
+  html: ->
     toc = $("nav#TOC")
     if toc.length
       toc.find("li").each -> sanitize($, $(this))
@@ -294,7 +301,7 @@ toc =
 #        background: "#fff0f0"
 
 notes =
-  html: ($) ->
+  html: ->
     notes = $("section.footnotes")
     notes.attr(id: "notes")
     if notes.length
@@ -359,7 +366,7 @@ headings =
       fontWeight: "bold"
       marginRight: "1em"
       display: "inline"
-  html: ($) ->
+  html: ->
     subsubheadings = $("h3, h4, h5, h6")
     for heading in subsubheadings
       next = $(heading).next()
@@ -403,21 +410,18 @@ lists = ->
     li:
       listStyle: "decimal"
 
-# TODO: darker border, left only.
 quote = ->
   blockquote:
     borderLeftWidth: "thick"
     borderLeftStyle: "solid"
     borderLeftColor: "black"
-    #border: "thick solid #ebebeb"
     padding: 1 * lineHeight + "px"
     marginBottom: 1 * lineHeight + "px"
     "p:last-child":
       marginBottom: "0px"
 
-# TODO: sliders if needed.
 code =
-  html: ($) ->
+  html: ->
     family = "Inconsolata:400,700"
     link = $ "<link>",
       href: "https://fonts.googleapis.com/css?family=#{family}"
@@ -431,7 +435,6 @@ code =
     pre:
       overflowX: "auto"
       backgroundColor: "#ebebeb"
-      #marginTop: 1 * lineHeight + "px"
       marginBottom: 1 * lineHeight + "px"
       paddingLeft: lineHeight + "px"
       paddingRight: lineHeight + "px"
@@ -453,7 +456,7 @@ figure =
       textAlign: "center"
 
 table =
-  html: ($) ->
+  html: ->
     $("table").wrap("<div class='table'></div>");
   css:
     ".table":
@@ -483,7 +486,7 @@ math =
       overflowX: "auto"
       overflowY: "hidden"
       width: "100%"
-  html: ($) ->
+  html: ->
     # Mathjax header
     old = $("head script").filter (i, elt) -> 
       src = $(elt).attr("src")
@@ -497,11 +500,17 @@ math =
     window.document.head.appendChild script
 
 fontAwesome = 
-  html: ($) ->
+  html: ->
     link = $ "<link>",
       rel: "stylesheet"
       href: "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
     $("head").append link
+
+
+# Register Style Components
+# ------------------------------------------------------------------------------
+
+# TODO: reduce code duplication here; components should be registered once.
 
 absurdify = (api) ->
   api.add defaults.css
@@ -521,158 +530,22 @@ absurdify = (api) ->
   api.add toc.css
   api.add notes.css
 
-domify = ($, options) ->
-  defaults.html($)
-  typography.html($)
-  headings.html($)
-  code.html($)
-  table.html($)
-  math.html($) if $(".math").length
-  notes.html($)
-  toc.html($)
-  fontAwesome.html($)
-
-
-
-#layout()
-#  // min-width: 12em // can we do that ? // when does the window does decide 
-#  // that the viewport size is too small and adds a slider ? For small widths,
-#  // the body gets reduced, but the window/viewport or whatever contains it
-#  // stops getting thiner, and a scroll appears. FUCK, THIS IS BULLSHIT.
-#  // even the html element states that it's getting thinner, but still,
-#  // the scroll bar tells me otherwise.
-
-
-#  // probably need to transfer this in "main"; some control elements
-#  // may not like being padded or constrained in width like that.
-#  // make the "toplevel container" configurable ?
-#  max-width: 32em
-#  margin: auto
-#  padding: 1.5em 
-
-#html
-#  body
-#    // box-sizing: border-box : consider it, but study the impact first
-#    layout()
-#    typography()
-
-#    > header
-#      border-top: 3px solid #000000
-#      margin: 33px 0em 33px 0em
-#      h1
-#        font-size: huge
-#//        line-height: 66px
-#//        font-weight: bold
-#//        padding-top: 7px
-#//        margin-bottom: -7px
-#        //margin: 0em 0em 0em 0em //margin: 0.25em 0em 0.25em 0em
-#      .author
-#        line-height: 33px
-#        padding-top: 31px
-#        margin-bottom: 2px
-#        //margin: 0.25em 0em 0.5em 0em
-#        font-size: medium
-#        //font-weight: bold
-#      .date
-#        line-height: 33px
-#        //margin: 0.25em 0em 0.5em 0em
-#        font-family: "Alegreya SC", serif
-#        font-size: medium
-#        font-weight: normal
-#      p
-#        font-size: medium
-#        font-weight: normal
-#    a
-#      text-decoration: none
-#      outline: 0;
-#    a:hover
-#      text-decoration: none
-
-#    h1, h2, h3, h4, h5, h6
-#      a:hover
-#        text-decoration: none;
-
-#    a:link
-#      color: black
-
-#    a:visited
-#      color: black
-
-#    h1
-#      line-height: 1.5em
-#      font-size: large
-#      font-weight: bold
-
-#    h2
-#      font-size: 28px
-#      font-weight: bold
-
-#    h3, h4, h5, h6
-#      font-size: 22px
-#      font-weight: bold
-#      float: left
-#      margin-right: 1em
-#      margin-top: 0px
-#      margin-bottom: 0px
-
-#    p
-#      margin-top: 0em
-#      margin-bottom: 1.5em
-
-#    sup
-#      vertical-align: super
-#      fontSize: 14px
-
-#    code
-#      font-size: 22px//20.5px
-#      font-family: Inconsolata
-
-#    pre
-#      overflow-x: auto
-#      line-height: 33px//1.25
-#      background-color: #ebebeb
-#      margin-top: 1.5em
-#      margin-bottom: 1.5em
-#      padding: 0.75em 1.5em 0.75em 1.5em // 0.5em 1em 0.5em 1em
-
-#    blockquote
-#      background: #f9f9f9
-#      border-left: 5px solid #ccc
-#      margin: 1em 2em
-#      padding: 0.5em 1em
-#      p
-#        &:first-child
-#          margin-top: 0em;
-#        &:last-child
-#          margin-bottom: 0em;
-
-#    ul
-#      list-style-type: disc
-#      li
-#        marginLeft: 2em
-
-#    img
-#      width: 32em
-
-#    figcaption
-#      margin-top: 0.0em
-#      text-align: center
-#      font-style: italic
-
-#    figure
-#      margin: 0px
-
-#    .tombstone
-#      float: right
-
-#    span.MathJax_SVG
-#      svg
-#        color: black;
+domify = (options) ->
+  defaults.html()
+  typography.html()
+  headings.html()
+  code.html()
+  table.html()
+  math.html() if $(".math").length
+  notes.html()
+  toc.html()
+  fontAwesome.html()
 
 
 # Commande-Line API
 # ------------------------------------------------------------------------------
 window = undefined
+$ = undefined
 
 main = ->
   argv = process.argv[2..]
@@ -729,7 +602,7 @@ main = ->
       $("head").append style
 
     # Perform the other DOM transformations
-    domify($) 
+    domify() 
 
     # Write the result
     outputString = window.document.documentElement.outerHTML
