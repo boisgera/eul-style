@@ -99,9 +99,7 @@ typography =
       textRendering: "optimizeLegibility"
       lineHeight: lineHeight + "px"
       textAlign: "left"
-      p: # migrate to (text) layout ? Pff dunno ... typo would be family,
-         # style, lineheight ? But this is dispatched in many places 
-         # (header stuff, etc.)
+      "p, .p":
         marginBottom: lineHeight + "px"
         textAlign: "justify"
         hyphens: "auto"
@@ -354,20 +352,22 @@ headings =
       fontSize: medium
       fontWeight: "bold"
       lineHeight: lineHeight + "px"
-  #    marginTop: 1.0 * lineHeight + "px"
       marginBottom: 0.5 * lineHeight + "px"
 
     "h3, h4, h5, h6":
       fontSize: medium
       fontWeight: "bold"
-      float: "left"
       marginRight: "1em"
-  #    marginTop: "0px"
-  #    marginBottom: "0px"
+      display: "inline"
   html: ($) ->
     subsubheadings = $("h3, h4, h5, h6")
     for heading in subsubheadings
-      if $(heading).next().is("ul, ol")
+      next = $(heading).next()
+      if next.is("p")
+        next.replaceWith("<div class='p'>" + next.html() + "</span>")
+        p = $(heading).next()
+        p.prepend(heading)
+      if next.is("ul, ol")
           $("<br>").insertAfter($(heading)) 
 
 
