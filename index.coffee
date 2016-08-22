@@ -535,7 +535,35 @@ math = # if $(".math").length guard ? "force" option?
     old.remove()
     insert_script
       src: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML" 
-      text: "MathJax.Hub.Config({jax: ['output/CommonHTML'], 'CommonHTML': {scale: 90}});"
+      text: "MathJax.Hub.Config({
+               jax: ['output/CommonHTML'], 
+               CommonHTML: {
+                 scale: 100,
+                 linebreaks: {automatic: true}, 
+                 mtextFontInherit: true}
+            });"
+      # NOTA: the linebreaking is not responsive actually for inlined equations,
+      #       which is what I was searching for (AFAICT)
+      # NOTA: using mtextFontInhserit: true is tempting to get Alegreya into
+      #       equations when the text is required; the problem is that the
+      #       0.9 scaling would be applied to the font ... Otherwise, I may
+      #       schedule, when the Mathjax rendering is done as search for all
+      #       spans with mjx-text class and unset their font-size style attribute?
+      #       --
+      # This link <https://groups.google.com/forum/#!topic/mathjax-users/v3W-daBz87k>
+      # is interesting: experiments show that Alegreya declares perfectly its x-height,
+      # but the Computer Modern fonts seems to underestimate it (and the rounded x
+      # make things worse). Nah, forget it, on the paper it's perfect, it's only
+      # that the LaTeX font -- for a given x-height -- seems "bigger" ... so it's not
+      # a computation issue, it's a purely perceptual issue.
+      # WOW, except that it's insane, the proper factor is set in two steps
+      # (two nested font-size) whose global effect does the job ... so hacking this
+      # would be probably painful and fragile ...
+      #
+      # did finally go back to the default scale; for most browser this is the
+      # correct setting and it's also simpler. As a consequence, mtextFontInherit
+      # can also be set to true without issues.
+
 
 fontAwesome = 
   html: ->
@@ -556,9 +584,9 @@ demo =
 
 # TODO: reduce code duplication here; components should be registered once.
 
-elts = [defaults, typography, layout, header, headings, links, footnotes, 
+elts = [jQuery, defaults, typography, layout, header, headings, links, footnotes, 
         lists, quote, code, image, figure, table, math, notes, toc, 
-        fontAwesome, jQuery, demo]
+        fontAwesome, demo]
 
 absurdify = (api) ->
   for elt in elts
