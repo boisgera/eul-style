@@ -539,7 +539,7 @@ math = # if $(".math").length guard ? "force" option?
                jax: ['output/CommonHTML'], 
                CommonHTML: {
                  scale: 100,
-                 linebreaks: {automatic: true}, 
+                 linebreaks: {automatic: false}, 
                  mtextFontInherit: true}
             });"
       # NOTA: the linebreaking is not responsive actually for inlined equations,
