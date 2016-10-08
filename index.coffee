@@ -579,6 +579,94 @@ jQuery =
 demo =
   js: "js/demo.js"
 
+title_case = (text) ->
+  no_cap = "a an the and but or for nor aboard about above across after against
+along amid among around as at atop before behind below beneath beside between
+beyond by despite down during for from in inside into like near of off on onto
+out outside over past regarding round since than through throughout till to
+toward under unlike until up upon with within without".split(" ")
+
+  no_cap = no_cap.concat [
+    "un", "une", "de", "du", "des", "le", "la", "les", 
+    /^l'.*/, /^l’.*/, /^d'.*/, /^d’.*/,
+    "et", "ou", "ni", "mais", "donc", "car",
+    "sur", "vers", "entre", "avec"
+  ]
+
+  # Nota: this is improper: "d'ouverture" should become "d'Ouverture".
+  #       the detection of "'" should trigger a subsplit and every part
+  #       should be examined "as usual".
+
+  parts = text.split(" ")
+  new_parts = [parts[0]]
+  for part in parts[1..]
+    match = false
+    for item in no_cap
+      if type(item) is "string"
+        pattern = new RegExp("^" + item + "$")
+      else
+        pattern = item 
+      if part.match(pattern)
+        match = true
+        break
+    if not match
+      part = part.capitalize()
+    new_parts.push part
+  new_parts.join(" ")
+
+bibliography =
+  html: ({bib}) ->
+
+    find_entry = (id) ->
+      for entry in bib
+        if entry.id is id
+          return entry
+      undefined
+
+    short_title = (text) ->
+      parts = text.split(".")
+      parts[0]
+
+    authors = (entry) ->
+      s = ""
+      for author, i in entry.author
+        if i > 0
+          if i < entry.author.length - 1
+             s += ", "
+          else:
+             s += " and "
+        s += author.given + " " + author.family
+      s
+
+    year = (entry) ->
+      entry?.issued?["date-parts"]?[0]?[0]
+
+    refs = $("#refs")
+    ref_ids = []
+    for div in refs.children()
+      ref_ids.push div.getAttribute("id")[4..]
+    refs.html("<ol></ol>")
+    list = refs.find("ol")
+    for id in ref_ids
+      list.append("<li id='ref-#{id}' style='margin-bottom:0.75em'></li>")
+    for li in list.children()
+        id = li.getAttribute("id")[4..]
+        entry = find_entry(id)
+        b64Data = Buffer(JSON.stringify(entry, null, 2)).toString("base64")
+        b64Prefix = "data:application/json;charset=utf-8;base64,"
+        b64 = b64Prefix + b64Data 
+        $(li).append("<em>" + title_case(short_title(entry.title)) + "</em>")
+        $(li).append("<br>")
+        $(li).append(authors(entry) + ", " + year(entry) + ".")
+        $(li).append("<br>")
+        $(li).append("JSON: <a href='#{b64}'><i style='font-size:18px;position:relative;bottom:0.05em;' class='fa fa-file-text-o'></i></a>&nbsp;")
+        if entry.URL?
+          $(li).append(" / URL: <a href='#{entry.URL}'><i style='font-size:18px'class='fa fa-link'></i></a>")
+        if entry.DOI?
+          $(li).append("  / DOI: <a href='https://doi.org/#{entry.DOI}'><i style='font-size:18px'class='fa fa-link'></i></a>")
+
+
+   
 # Register Style Components
 # ------------------------------------------------------------------------------
 
@@ -586,24 +674,27 @@ demo =
 
 elts = [jQuery, defaults, typography, layout, header, headings, links, footnotes, 
         lists, quote, code, image, figure, table, math, notes, toc, 
-        fontAwesome, demo]
+        fontAwesome, demo, bibliography]
 
-absurdify = (api) ->
+absurdify = (api, options) ->
   for elt in elts
     if elt.css?
       css = elt.css
       if type(css) is "function"
-        css = css()
+        css = css(options)
       api.add css
       
-domify = () ->
+domify = (options) ->
   for elt in elts
     if elt.html?
-      elt.html()
+      elt.html(options)
 
-scriptify = () ->
+scriptify = (options) ->
   for elt in elts
     if elt.js?
+      js = elt.js
+      if type(js) is "function"
+        js = js(options)
       jsPath = path.join(__dirname, elt.js)
       text = fs.readFileSync jsPath, "utf8"
       insert_script text: text
@@ -615,14 +706,21 @@ $ = undefined
 
 main = ->
   argv = process.argv[2..]
-  {h: h1, html: h2, s: s1, style: s2, _: inputHTMLFilenames} = parseArgs(argv)
-  HTMLFilename = if h1 then h1 else h2
-  CSSFilename = if s1 then s1 else s2
+  args = parseArgs argv
+  HTMLFilename = if args.h then args.h else args.html
+  CSSFilename = if args.s then args.s else args.style
+  bibliographyFilename = if args.b then args.b else args.bibliography
+  inputHTMLFilenames = args._
+
+  # If present, bibliographyFilename shall be a CSL json file.
+  if bibliographyFilename?
+    bib_json = JSON.parse fs.readFileSync(bibliographyFilename, "utf8")
+  options = {bib: bib_json}
 
   # Generate the CSS
   aboutCSS = {}
   absurd (api) ->
-    absurdify api
+    absurdify api, options
     api.compile (error, css) ->
       if error?
         console.error error
@@ -668,10 +766,10 @@ main = ->
       $("head").append style
 
     # Perform the other DOM transformations
-    domify() 
+    domify(options) 
 
     # Include JS scripts required at runtime
-    scriptify()
+    scriptify(options)
 
     # Write the result
     outputString = window.document.documentElement.outerHTML
