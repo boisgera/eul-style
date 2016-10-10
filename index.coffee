@@ -234,6 +234,8 @@ trim_period = (text) ->
     text = text[...-1]
   return text
 
+
+# TODO: "Corollary$^\dagger$" won't register as a Corollary.
 split_types_text = (text) ->
   section_types = "Theorem Lemma Proposition Corollary 
     Definition Remark Example Examples 
@@ -590,7 +592,7 @@ toward under unlike until up upon with within without".split(" ")
     "un", "une", "de", "du", "des", "le", "la", "les", 
     /^l'.*/, /^l’.*/, /^d'.*/, /^d’.*/,
     "et", "ou", "ni", "mais", "donc", "car",
-    "sur", "vers", "entre", "avec"
+    "sur", "vers", "entre", "avec", "sans", "par"
   ]
 
   # Nota: this is improper: "d'ouverture" should become "d'Ouverture".
@@ -635,7 +637,8 @@ bibliography =
              s += ", "
           else:
              s += " and "
-        s += author.given + " " + author.family
+        dp = if author["dropping-particle"]? then " " + author["dropping-particle"] else ""
+        s += author.given + dp + " " + author.family
       s
 
     year = (entry) ->
