@@ -637,8 +637,11 @@ bibliography =
              s += ", "
           else:
              s += " and "
-        dp = if author["dropping-particle"]? then " " + author["dropping-particle"] else ""
-        s += author.given + dp + " " + author.family
+        if author.literal?
+          s += author.literal
+        else
+          dp = if author["dropping-particle"]? then " " + author["dropping-particle"] else ""
+          s += author.given + dp + " " + author.family
       s
 
     year = (entry) ->
