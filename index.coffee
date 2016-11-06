@@ -590,18 +590,22 @@ toward under unlike until up upon with within without".split(" ")
 
   no_cap = no_cap.concat [
     "un", "une", "de", "du", "des", "le", "la", "les", 
-    /^l'.*/, /^l’.*/, /^d'.*/, /^d’.*/,
+    "d", "l",
     "et", "ou", "ni", "mais", "donc", "car",
-    "sur", "vers", "entre", "avec", "sans", "par"
+    "sur", "vers", "entre", "avec", "sans", "par",
   ]
 
   # Nota: this is improper: "d'ouverture" should become "d'Ouverture".
   #       the detection of "'" should trigger a subsplit and every part
   #       should be examined "as usual".
 
-  parts = text.split(" ")
-  new_parts = [parts[0]]
-  for part in parts[1..]
+
+  parts = text.split(/[\s,;\-:.!?"'’&]+/)
+  seps = text.split(/[^\s,;\-:.!?"'’&]+/)
+  new_parts = []
+  #console.error parts
+  #parts = text.split(" ")
+  for part in parts
     match = false
     for item in no_cap
       if type(item) is "string"
@@ -614,7 +618,23 @@ toward under unlike until up upon with within without".split(" ")
     if not match
       part = part.capitalize()
     new_parts.push part
-  new_parts.join(" ")
+
+  output = ""
+  if seps[0] is ""
+    first = seps
+    second = new_parts
+  else
+    first = new_parts
+    second = seps
+  while first.length
+    output += first.shift()
+    if second.length
+      output += second.shift()
+  output
+  
+#  new_parts.join(" ")
+
+
 
 bibliography =
   html: ({bib}) ->
