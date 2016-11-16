@@ -23,6 +23,7 @@
   "bin": {
     "eul-style": "index.js"
   },
+  "files": ["js"],
   "dependencies": {
     "absurd": "^0.3.6",
     "coffee-script": "^1.10.0",

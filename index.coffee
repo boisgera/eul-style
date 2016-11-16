@@ -234,8 +234,6 @@ trim_period = (text) ->
     text = text[...-1]
   return text
 
-
-# TODO: "Corollary$^\dagger$" won't register as a Corollary.
 split_types_text = (text) ->
   section_types = "Theorem Lemma Proposition Corollary 
     Definition Remark Example Examples 
@@ -634,7 +632,8 @@ toward under unlike until up upon with within without".split(" ")
   
 #  new_parts.join(" ")
 
-
+proofs =
+  js: "js/proofs.js"
 
 bibliography =
   html: ({bib}) ->
@@ -700,7 +699,7 @@ bibliography =
 
 elts = [jQuery, defaults, typography, layout, header, headings, links, footnotes, 
         lists, quote, code, image, figure, table, math, notes, toc, 
-        fontAwesome, demo, bibliography]
+        fontAwesome, demo, bibliography, proofs]
 
 absurdify = (api, options) ->
   for elt in elts
