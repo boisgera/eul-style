@@ -629,11 +629,6 @@ toward under unlike until up upon with within without".split(" ")
     if second.length
       output += second.shift()
   output
-  
-#  new_parts.join(" ")
-
-proofs =
-  js: "js/proofs.js"
 
 bibliography =
   html: ({bib}) ->
@@ -690,6 +685,42 @@ bibliography =
         if entry.DOI?
           $(li).append("  / DOI: <a href='https://doi.org/#{entry.DOI}'><i style='font-size:18px'class='fa fa-link'></i></a>")
 
+
+# ------------------------------------------------------------------------------
+   
+containsTombstone = (elt) ->
+  if elt[0].outerHTML.indexOf("\\blacksquare") > -1
+    return true
+  return false 
+
+proofs =
+  html: ->
+    # find proof sections
+    sections = $("section")
+    #console.log sections.length, sections
+    proofSections = []
+    for section in sections
+      header = $(section).find("h3, h4, h5, h6").first()
+      if header.length
+        text = header.text()
+        if text[..4] is "Proof"
+          proofSections.push($(section))
+
+    # split the section if a tombstone is found 
+    # (unless it's the last paragraph).
+
+    for section in proofSections
+      split = false
+      newSection = $("<section></section>")
+      for paragraph in section.children()
+        if split
+          newSection.append($(paragraph)) 
+        else if containsTombstone($(paragraph))
+          split = true
+      if newSection.children().length > 0
+        section.after(newSection)
+        
+  js: "js/proofs.js"
 
    
 # Register Style Components
