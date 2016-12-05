@@ -275,9 +275,11 @@ toc =
               $(anchor).html(subtext or text)
               #$(anchor).parent().append(badge($, t)) for t in types
 
-              # TODO: stack multiple badges (use z-index).
+              # TODO: stack multiple badges (use z-index) ?
 
-              $(anchor).parent().prepend(badge(t)) for t in types.reverse()
+              # TMP: keep only the first type tag.
+              $(anchor).parent().prepend badge(types[0])
+              #$(anchor).parent().prepend(badge(t)) for t in types.reverse()
               
       #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
       #top_lis.children("i").after(" ")
