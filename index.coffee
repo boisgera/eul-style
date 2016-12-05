@@ -249,7 +249,7 @@ split_types_text = (text) ->
       parts.shift() # remove the separator
     else
       break
-  text = parts.join("")
+  text = parts.join("").trim()
   return [types, text]
       
 badge = (label) ->
@@ -271,6 +271,7 @@ toc =
             $(anchor).remove()
           text = trim_period text
           [types, subtext] = split_types_text text
+          #console.warn "*", [types, subtext]
           if types.length
               $(anchor).html(subtext or text)
               #$(anchor).parent().append(badge($, t)) for t in types
