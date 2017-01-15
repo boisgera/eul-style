@@ -768,12 +768,18 @@ main = ->
   args = parseArgs argv
   HTMLFilename = if args.h then args.h else args.html
   CSSFilename = if args.s then args.s else args.style
-  bibliographyFilename = if args.b then args.b else args.bibliography
+
+  bibliographyFilenames = if args.b then args.b else args.bibliography
   inputHTMLFilenames = args._
 
   # If present, bibliographyFilename shall be a CSL json file.
-  if bibliographyFilename?
-    bib_json = JSON.parse fs.readFileSync(bibliographyFilename, "utf8")
+  if bibliographyFilenames?
+    if type(bibliographyFilenames) is "string"
+      bibliographyFilenames = [bibliographyFilenames]
+    bib_json = []
+    for bibliographyFilename in bibliographyFilenames
+      extra_bib_json = JSON.parse fs.readFileSync(bibliographyFilename, "utf8")
+      bib_json = bib_json.concat bib_json, extra_bib_json  
   options = {bib: bib_json}
 
   # Generate the CSS
