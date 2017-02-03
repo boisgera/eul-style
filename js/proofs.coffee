@@ -30,8 +30,8 @@ main = ->
   sections = $("section")
   proof_sections = []
   for section in sections
-    header = $(section).find("h3, h4, h5, h6").first()
-    if header.length
+    header = $(section).find("h1, h2, h3, h4, h5, h6").first()
+    if header.length and header.prop("tagName") in ["H3", "H4", "H5", "H6"]
       text = header.text()
       if text[..4] is "Proof"
         proof_sections.push($(section))
