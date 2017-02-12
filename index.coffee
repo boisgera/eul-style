@@ -496,7 +496,6 @@ width_percentage = (image_filename) ->
   ppi = density * 2.54
   width_px = execSync("identify -format '%w' '" + image_filename + "'").toString()
   width_in = width_px / ppi
-  console.error ">", image_filename, ppi, width_px, width_in, latex_width_in
   return Math.min(100.0 * width_in / latex_width_in, 100.0)
  
 image =
@@ -507,9 +506,7 @@ image =
     for img in images
       filename = $(img).attr("src")
       if filename[-3..] in ["jpg", "png"]
-          console.error filename, width_percentage(filename) + "%"
           $(img).css("width", width_percentage(filename) + "%")
-          #$(img).attr("width", "50%")
   css:
     img:
       display: "block"
