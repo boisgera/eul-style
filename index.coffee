@@ -31,6 +31,7 @@
 fs = require "fs"
 path = require "path"
 process = require "process"
+{exec, execSync} = require "child_process"
 
 # Third-Party Libraries
 absurd = do -> # workaround for absurd.js (confused by command-line args).
@@ -485,9 +486,35 @@ code =
       paddingTop : 1 * lineHeight + "px"
       paddingBottom : 1 * lineHeight
 
-image = 
+# Image & Figures
+# ------------------------------------------------------------------------------
+
+width_percentage = (image_filename) ->
+  latex_width_in = 345.0 / 72.27 # standard LaTeX doc: 345.0 TeX points.
+  density = execSync("identify -format '%x' '" + image_filename + "'").toString()
+  # TODO: check that the unit is cm
+  ppi = density * 2.54
+  width_px = execSync("identify -format '%w' '" + image_filename + "'").toString()
+  width_in = width_px / ppi
+  console.error ">", image_filename, ppi, width_px, width_in, latex_width_in
+  return Math.min(100.0 * width_in / latex_width_in, 100.0)
+ 
+image =
+  html: ->
+    # TODO: consider bitmaps, set the appropriate width wrt 
+    #       "print size" (use image magic).
+    images = $("img")
+    for img in images
+      filename = $(img).attr("src")
+      if filename[-3..] in ["jpg", "png"]
+          console.error filename, width_percentage(filename) + "%"
+          $(img).css("width", width_percentage(filename) + "%")
+          #$(img).attr("width", "50%")
   css:
     img:
+      display: "block"
+      marginLeft: "auto"
+      marginRight: "auto"
       width: "100%"
       height: "auto"
 
@@ -495,9 +522,14 @@ figure =
   css:
     figure:
       marginBottom: lineHeight + "px"
-    figcaption:
-      fontStyle: "italic"
       textAlign: "center"
+    figcaption:
+      display: "inline-block"
+      fontStyle: "italic"
+      textAlign: "justify"
+      #align: "left"
+
+# ------------------------------------------------------------------------------
 
 table =
   html: ->
