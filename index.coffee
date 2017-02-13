@@ -493,6 +493,9 @@ width_percentage = (image_filename) ->
   latex_width_in = 345.0 / 72.27 # standard LaTeX doc: 345.0 TeX points.
   density = execSync("identify -format '%x' '" + image_filename + "'").toString()
   # TODO: check that the unit is cm
+  # NOTA: depending on the version of image magick, we have either the number
+  #       and the unit or only the number and the unit in a different field.
+  density = density.split(" ")[0]
   ppi = density * 2.54
   width_px = execSync("identify -format '%w' '" + image_filename + "'").toString()
   width_in = width_px / ppi
