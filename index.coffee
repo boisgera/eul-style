@@ -569,7 +569,7 @@ math = # if $(".math").length guard ? "force" option?
       /mathjax/.test src
     old.remove()
     insert_script
-      src: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML" 
+      src: "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML" 
       text: "MathJax.Hub.Config({
                jax: ['output/CommonHTML'], 
                CommonHTML: {
