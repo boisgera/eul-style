@@ -41,6 +41,9 @@
 #         specified at once? Or just a big dependency and include 
 #         every script specified individually (with the browserify "-r"
 #         option)?
+#
+#  TODO: replace absurd.js with custom code.
+
 
 # Requirements
 # ------------------------------------------------------------------------------
@@ -52,17 +55,17 @@ process = require "process"
 {exec, execSync} = require "child_process"
 
 # Third-Party Libraries
-absurd = do -> # workaround for absurd.js (confused by command-line args).
-  argv = process.argv
-  process.argv = ["coffee"]
-  absurd = require "absurd"
-  process.argv = argv
-  absurd
+#absurd = do -> # workaround for absurd.js (confused by command-line args).
+#  argv = process.argv
+#  process.argv = ["coffee"]
+#  absurd = require "absurd"
+#  process.argv = argv
+#  absurd
 coffeescript = require("coffee-script")
 jquery = require "jquery"
 jsdom = require "jsdom"
 parseArgs = require "minimist"
-
+_ = require "lodash"
 
 # Javascript Helpers
 # ------------------------------------------------------------------------------
@@ -77,6 +80,45 @@ String::decapitalize = ->
 
 String::startsWith = (string) ->
     this[...string.length] is string
+
+# CSS
+# ------------------------------------------------------------------------------
+
+toDash = (string) ->
+  string.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()
+
+splitByComma = (string) ->
+  string = string.trim()
+  pattern = /('[^']+'|"[^"]+"|[^,]+)/g
+  matches = string.match pattern
+  match.trim() for match in matches
+
+css = (stylesheet, object=false) ->
+  output = {} # keys: selectors, values: property-value object 
+  for selector, kvs of stylesheet
+    output[selector] = {}
+    for k, v of kvs
+      if type(v) isnt "object"
+        output[selector][toDash(k)] = v
+      else
+        rule = "#{k}": v
+        for selector_, kvs_ of css(rule, true)
+          selectors = splitByComma(selector)
+          selector_s = splitByComma(selector_)
+          combined_selectors = []
+          for k1 in selectors
+            for k2 in selector_s
+              if "&" in k2
+                key = k2.replace "&", k1
+              else
+                key = "#{k1} #{k2}"
+              combined_selectors.push key
+          output[combined_selectors.join ", "] = kvs_
+  if object
+    output
+  else
+    lines = JSON.stringify(output, undefined, 2).split "\n"
+    (line[2..] for line in lines[1...-1]).join("\n")
 
 
 # Insert Scripts for Runtime
@@ -785,14 +827,17 @@ elts = [jQuery, defaults, typography, layout, header, headings, links, footnotes
         lists, quote, code, image, figure, table, math, notes, toc, 
         fontAwesome, demo, bibliography, proofs]
 
-absurdify = (api, options) ->
+cssify = (options) ->
+  csss = []
   for elt in elts
     if elt.css?
-      css = elt.css
-      if type(css) is "function"
-        css = css(options)
-      api.add css
-      
+      css_ = elt.css
+      if type(css_) is "function"
+        css_ = css_(options)
+      csss.push css_
+  rules = _.merge({}, csss...)
+  css rules      
+
 domify = (options) ->
   for elt in elts
     if elt.html?
@@ -834,22 +879,16 @@ main = ->
 
   # Generate the CSS
   aboutCSS = {}
-  absurd (api) ->
-    absurdify api, options
-    api.compile (error, css) ->
-      if error?
-        console.error error
-        process.exit 1
-      else
-        if CSSFilename?
-          try
-            fs.writeFileSync CSSFilename, css, "utf-8"
-          catch error
-            console.log error
-            process.exit 1
-          aboutCSS.external = CSSFilename 
-        else
-          aboutCSS.inline = css
+  css_text = cssify options
+  if CSSFilename?
+    try
+      fs.writeFileSync CSSFilename, css_text, "utf-8"
+    catch error
+      console.log error
+      process.exit 1
+    aboutCSS.external = CSSFilename 
+  else
+    aboutCSS.inline = css_text
 
   # Transform the HTML (if any)
   if inputHTMLFilenames.length or HTMLFilename?
