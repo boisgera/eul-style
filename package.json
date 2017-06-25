@@ -1,6 +1,6 @@
 {
   "name": "eul-style",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Apply eul's style.",
   "scripts": {
     "prepublish": "npm run build",
