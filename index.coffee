@@ -23,6 +23,24 @@
 #     Q: how shipping files with this module ? and get them ?
 #     (as "package data") ... Mmm can't find easy answer here ...
 #     Well, I may have to use __dirname ...
+#
+#   - How to do it: 
+#
+#       - specify scripts to embed as (coffee or js)scripts or FUNCTIONS 
+#         (to be toString'd)? How do we know if the script is cs or js?
+#         There are a also quite a couple of catches with the second options, 
+#         but well, ... toString would automatically compile this stuff with
+#         coffescript, which is nice! Only accept js strings? Call the cs
+#         compiler to specify cs scripts? Yeah, that works beautifully.
+#         Maybe some option should be used to avoid the protection of
+#         symbols (think "bare") but I am not even sure ...
+#
+#       - now, about DEPENDENCIES: we need to specifiy them somehow.
+#         I am talking about npm modules dependencies. Collect them 
+#         all, then create a giant bundle from all scripts that are
+#         specified at once? Or just a big dependency and include 
+#         every script specified individually (with the browserify "-r"
+#         option)?
 
 # Requirements
 # ------------------------------------------------------------------------------
