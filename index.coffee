@@ -117,8 +117,13 @@ css = (stylesheet, object=false) ->
   if object
     output
   else
-    lines = JSON.stringify(output, undefined, 2).split "\n"
-    (line[2..] for line in lines[1...-1]).join("\n")
+    lines = []
+    for selector, kvs of output
+      lines.push "#{selector} {"
+      for k, v of kvs
+        lines.push "  #{k}: #{v};"
+      lines.push "}"
+    lines.join "\n"
 
 
 # Insert Scripts for Runtime
@@ -155,9 +160,9 @@ defaults =
       listStyle: "none"
     "blockquote, q":
       "quotes": "none"
-      ":before":
+      "&:before":
         content: "none"
-      ":after":
+      "&:after":
         content: "none"
     table:
       borderCollapse: "collapse"
@@ -436,7 +441,7 @@ header =
           marginBottom: 0.5 * lineHeight + "px"
           fontWeight: "normal"
         ".date":
-          fontFamily: '"Alegreya SC", serif'
+          fontFamily: 'Alegreya SC, serif'
           lineHeight: lineHeight + "px"
           fontSize: medium
           fontWeight: "normal"
