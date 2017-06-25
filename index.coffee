@@ -491,11 +491,11 @@ links =
       cursor: "pointer"
       textDecoration: "none"
       outline: 0
-      ":hover":
+      "&:hover":
         textDecoration: "none"
-      ":link":
+      "&:link":
         color: color
-      ":visited":
+      "&:visited":
         color: color
 
 footnotes =
