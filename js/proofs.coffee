@@ -26,7 +26,7 @@ show_proof = (section) ->
   tombstone.on "click", do (section) -> (-> hide_proof(section))
 
 main = ->
-  # find proof sections
+  # Find proof sections
   sections = $("section")
   proof_sections = []
   for section in sections
@@ -36,6 +36,7 @@ main = ->
       if text[..4] is "Proof"
         proof_sections.push($(section))
 
+  # Hide them
   for section in proof_sections
     hide_proof(section)
 

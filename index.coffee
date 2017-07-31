@@ -2,11 +2,15 @@
 
 # Usage: 
 #
-#     $ eul-style [--style=style.css] [--html=output.html] [input.html]`
+#     $ eul-style [--theme=NAME] [--style=style.css] [--html=output.html] [input.html]`
 
 
 # TODO
 # ------------------------------------------------------------------------------
+#
+#   - encapsulate variable for different themes
+#
+#   - theme options?
 #
 #   - add a "js" field to components: stuff that should be activated at runtime.
 #     many question to solve; these components are typically external 
@@ -93,7 +97,7 @@ splitByComma = (string) ->
   matches = string.match pattern
   match.trim() for match in matches
 
-css = (stylesheet, object=false) ->
+makeCss = (stylesheet, object=false) ->
   output = {} # keys: selectors, values: property-value object 
   for selector, kvs of stylesheet
     output[selector] = {}
@@ -102,7 +106,7 @@ css = (stylesheet, object=false) ->
         output[selector][toDash(k)] = v
       else
         rule = "#{k}": v
-        for selector_, kvs_ of css(rule, true)
+        for selector_, kvs_ of makeCss(rule, true)
           selectors = splitByComma(selector)
           selector_s = splitByComma(selector_)
           combined_selectors = []
@@ -141,7 +145,7 @@ insert_script = (options) ->
     window.document.head.appendChild script
 
 
-# Style
+# Classic Theme
 # ------------------------------------------------------------------------------
 
 defaults =
@@ -150,7 +154,8 @@ defaults =
       margin: 0
       padding: 0
       border: 0
-      boxSizing: "content-box" # "border-box" ? Study the transition (changes aspect)
+      boxSizing: "content-box" # "border-box" ? 
+      # Study the transition (changes aspect)
       fontSize: "100%"
       font: "inherit"
       verticalAlign: "baseline"
@@ -176,26 +181,23 @@ color = "black"
 
 # Typography
 
-# TODO: bring code typo here ? That would make sense. Defines font families too.
-base = 24
-lineHeight = base * 1.5 # prepare for rems instead of px ?
-ratio = Math.sqrt(2)
-# TODO: use "xx-small, x-small, small, medium, large, x-large, xx-large" ?
-#       (they are actually valid *values*) --> get xLarge instead of huge.
-small  = Math.round(base / ratio) + "px"
-medium = Math.round(base) + "px"
-large  = Math.round(base * ratio) + "px"
-xLarge = Math.round(base * ratio * ratio) + "px"
+typography = (->
+  base = 24
+  lineHeight = base * 1.5 # prepare for rems instead of px ?
+  ratio = Math.sqrt(2)
+  small  = Math.round(base / ratio) + "px"
+  medium = Math.round(base) + "px"
+  large  = Math.round(base * ratio) + "px"
+  xLarge = Math.round(base * ratio * ratio) + "px"
 
-typography =
-  html: -> # TODO: check that the link is not already here ?
+  html = -> # TODO: check that the link is not already here ?
     family = "Alegreya+Sans:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,800,800italic,900,900italic|Alegreya+Sans+SC:400,100,300,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic|Alegreya+SC:400,400italic,700,700italic,900,900italic|Alegreya:400,700,900,400italic,700italic,900italic"
     link = $ "<link>",
       href: "https://fonts.googleapis.com/css?family=#{family}"
       rel: "stylesheet"
       type: "text/css"
     $("head").append link
-  css:
+  css = 
     html:
       fontSize: medium
       fontStyle: "normal"
@@ -215,6 +217,9 @@ typography =
         MozHyphens: "auto"
       section:
         marginBottom: lineHeight + "px"
+
+   return {base, lineHeight, ratio, small, medium, large, xLarge, html, css}
+)()
       
 layout =
   css:
@@ -229,7 +234,7 @@ layout =
         boxSizing: "content-box" # check this ... check that 32 em applies to
         maxWidth: "32em"         # the text WITHOUT the padding.
         margin: "auto"
-        padding: lineHeight + "px" # use rems instead (1.5rem)?
+        padding: typography.lineHeight + "px" # use rems instead (1.5rem)?
 
 #toc =
 #  html: ->
@@ -318,7 +323,7 @@ split_types_text = (text) ->
   text = parts.join("").trim()
   return [types, text]
       
-badge = (label) ->
+wrapInBadge = (label) ->
   label = label[...3].toLowerCase()
   $("<span class='badge'>#{label}<span>")
 
@@ -340,13 +345,13 @@ toc =
           #console.warn "*", [types, subtext]
           if types.length
               $(anchor).html(subtext or text)
-              #$(anchor).parent().append(badge($, t)) for t in types
+              #$(anchor).parent().append(wrapInBadge($, t)) for t in types
 
               # TODO: stack multiple badges (use z-index) ?
 
               # TMP: keep only the first type tag.
-              $(anchor).parent().prepend badge(types[0])
-              #$(anchor).parent().prepend(badge(t)) for t in types.reverse()
+              $(anchor).parent().prepend wrapInBadge(types[0])
+              #$(anchor).parent().prepend(wrapInBadge(t)) for t in types.reverse()
               
       #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
       #top_lis.children("i").after(" ")
@@ -362,24 +367,24 @@ toc =
       position: "relative"
       fontWeight: "bold"
       "> *":
-        marginBottom: lineHeight + "px"
+        marginBottom: typography.lineHeight + "px"
       li:
         listStyleType: "none"
         marginLeft: 0
         paddingLeft: 0
       ul:
         li: 
-          marginLeft: lineHeight + "px"
+          marginLeft: typography.lineHeight + "px"
           fontWeight: "normal"
     ".section-flag": # TODO: shift a bit down.
-      lineHeight: lineHeight + "px"
-      fontSize: small
+      lineHeight: typography.lineHeight + "px"
+      fontSize: typography.small
       fontWeight: "300"
       fontFamily: "Alegreya Sans SC"
       marginBottom: 0
     "nav#TOC > ul > li.top-li":
       marginBottom: 0
-      paddingBottom: lineHeight
+      paddingBottom: typography.lineHeight
       borderWidth: "2px 0 0 0"
       borderStyle: "solid"
     "nav#TOC > ul > li.top-li:last-child":
@@ -389,7 +394,7 @@ toc =
       bottom: "0.13em"
       fontFamily: "Alegreya Sans SC"
       fontWeight: "300"
-      fontSize: small
+      fontSize: typography.small
       display: "inline-block"
       lineHeight: "1.2em"
       height: "1.2em"
@@ -405,6 +410,43 @@ toc =
       #marginLeft: "1em"
 #      ":hover":
 #        background: "#fff0f0"
+
+#badge = 
+#  css:
+#    ".badge":
+#      whiteSpace: "nowrap"
+#      span:
+#        textTransform: "lowercase"
+#        position: "relative"
+#        bottom: "0.13em"
+#        fontFamily: "Alegreya Sans SC"
+#        fontWeight: "300"
+#        fontSize: small
+#        display: "inline-block"
+#        lineHeight: "1.2em"
+#        height: "1.2em"
+#        #width: "2em"
+#        textAlign: "center"
+##        borderStyle: "solid"
+##        borderWidth: "1px"
+##        color: "#b0b0b0"
+#        #borderRadius: "2px"
+#        backgroundColor: "#f0f0f0"
+#        verticalAlign: "baseline"
+#        boxShadow: "0px 1.0px 1.0px #aaa"
+##        marginRight: "1em"
+#        padding: "0 0.5em 0 0.5em"
+#        "&:first-child":
+#          borderRadius: "2px 0 0 2px"
+#        "&:last-child":
+#          borderRadius: "0 2px 2px 0"
+#      ".key":
+#        backgroundColor: "#707070"
+#        color: "white"
+#        fontWeight: "normal"
+#        boxShadow: "0px 1.0px 1.0px #a0a0a0"
+#        #textShadow: "1px 1px 0px #d0d0d0"
+      
 
 notes =
   html: ->
@@ -426,26 +468,26 @@ header =
                   # class="main", etc.) and select the headers that are children
                   # -- not descendants -- of these.
         #borderTop: "3px solid #000000"
-        marginTop: 2.0 * lineHeight + "px" # not sure that's the right place.
-        marginBottom: 2.0 * lineHeight + "px"
+        marginTop: 2.0 * typography.lineHeight + "px" # not sure that's the right place.
+        marginBottom: 2.0 * typography.lineHeight + "px"
         h1:
-          fontSize: xLarge
-          lineHeight: 1.5 * lineHeight + "px"
-          marginTop: 0.0 * lineHeight + "px" # compensate somewhere else, here
-          marginBottom: lineHeight + "px"    # is not the place.
+          fontSize: typography.xLarge
+          lineHeight: 1.5 * typography.lineHeight + "px"
+          marginTop: 0.0 * typography.lineHeight + "px" # compensate somewhere else, here
+          marginBottom: typography.lineHeight + "px"    # is not the place.
           fontWeight: "bold"
         ".author":
-          fontSize: medium
-          lineHeight: lineHeight + "px"
+          fontSize: typography.medium
+          lineHeight: typography.lineHeight + "px"
   #        paddingTop: "1.5px" # makes the "true" baseline periodic (48 px)
-          marginBottom: 0.5 * lineHeight + "px"
+          marginBottom: 0.5 * typography.lineHeight + "px"
           fontWeight: "normal"
         ".date":
           fontFamily: 'Alegreya SC, serif'
-          lineHeight: lineHeight + "px"
-          fontSize: medium
+          lineHeight: typography.lineHeight + "px"
+          fontSize: typography.medium
           fontWeight: "normal"
-          marginBottom: 0.5 * lineHeight + "px"
+          marginBottom: 0.5 * typography.lineHeight + "px"
           float: "none" # it's a pain to have to put that here to counteract
                         # the "float: left" used in "normal" h3 ...
                         # OTOH, this date and author stuff probably shouldn't
@@ -457,19 +499,19 @@ header =
 headings =
   css:
     h1:
-      fontSize: large
+      fontSize: typography.large
       fontWeight: "bold"
-      lineHeight: 1.25 * lineHeight + "px"
-      marginTop: 2.0 * lineHeight + "px"
-      marginBottom: 0.75 * lineHeight + "px"
+      lineHeight: 1.25 * typography.lineHeight + "px"
+      marginTop: 2.0 * typography.lineHeight + "px"
+      marginBottom: 0.75 * typography.lineHeight + "px"
     h2:
-      fontSize: medium
+      fontSize: typography.medium
       fontWeight: "bold"
-      lineHeight: lineHeight + "px"
-      marginBottom: 0.5 * lineHeight + "px"
+      lineHeight: typography.lineHeight + "px"
+      marginBottom: 0.5 * typography.lineHeight + "px"
 
     "h3, h4, h5, h6":
-      fontSize: medium
+      fontSize: typography.medium
       fontWeight: "bold"
       marginRight: "1em"
       display: "inline"
@@ -510,7 +552,7 @@ lists =
         listStyleType: "none"
         listStyleImage: "none"
         listStylePosition: "outside"
-        marginLeft: 1 * lineHeight + "px"
+        marginLeft: 1 * typography.lineHeight + "px"
         paddingLeft: "0.5em"    
     ul:
       li:
@@ -525,8 +567,8 @@ quote =
       borderLeftWidth: "thick"
       borderLeftStyle: "solid"
       borderLeftColor: "black"
-      padding: 1 * lineHeight + "px"
-      marginBottom: 1 * lineHeight + "px"
+      padding: 1 * typography.lineHeight + "px"
+      marginBottom: 1 * typography.lineHeight + "px"
       "p:last-child":
         marginBottom: "0px"
 
@@ -540,16 +582,16 @@ code =
     $("head").append link
   css:
     code:
-      fontSize: medium
+      fontSize: typography.medium
       fontFamily: "Inconsolata"
     pre:
       overflowX: "auto"
       backgroundColor: "#ebebeb"
-      marginBottom: 1 * lineHeight + "px"
-      paddingLeft: lineHeight + "px"
-      paddingRight: lineHeight + "px"
-      paddingTop : 1 * lineHeight + "px"
-      paddingBottom : 1 * lineHeight
+      marginBottom: 1 * typography.lineHeight + "px"
+      paddingLeft: typography.lineHeight + "px"
+      paddingRight: typography.lineHeight + "px"
+      paddingTop : 1 * typography.lineHeight + "px"
+      paddingBottom : 1 * typography.lineHeight
 
 # Image & Figures
 # ------------------------------------------------------------------------------
@@ -586,7 +628,7 @@ image =
 figure =
   css:
     figure:
-      marginBottom: lineHeight + "px"
+      marginBottom: typography.lineHeight + "px"
       textAlign: "center"
     figcaption:
       display: "inline-block"
@@ -604,19 +646,19 @@ table =
       overflowX: "auto"
       overflowY: "hidden"
       width: "100%"
-      marginBottom: lineHeight + "px"
+      marginBottom: typography.lineHeight + "px"
     table:
       padding: 0 # transfer in reset/defaults ?
       marginLeft: "auto"
       marginRight: "auto"
-      borderSpacing: "1em " + (lineHeight - base) + "px"
+      borderSpacing: "1em " + (typography.lineHeight - typography.base) + "px"
       borderCollapse: "collapse"
       borderTop: "medium solid black"
       borderBottom: "medium solid black"
     thead:
       borderBottom: "medium solid black"
     "td, th":
-      padding: 0.5*(lineHeight - base) + "px" + " 0.5em"
+      padding: 0.5*(typography.lineHeight - typography.base) + "px" + " 0.5em"
 
 # TODO: need to implement the overflow without an extra "block" that would
 #       get the formula "out" of the current parapgraph and mess up spacing.
@@ -822,34 +864,145 @@ proofs =
         
   js: "js/proofs.js"
 
-   
-# Register Style Components
+classic = [
+  jQuery, 
+  defaults, 
+  typography, 
+  layout, 
+  header, 
+  headings, 
+  links, 
+  footnotes, 
+  lists, 
+  quote, 
+  code, 
+  image, 
+  figure, 
+  table, 
+  math, 
+  notes, 
+  toc, 
+  fontAwesome, 
+  demo, 
+  bibliography, 
+  proofs]
+
+# Modern/Slides Theme
 # ------------------------------------------------------------------------------
 
-# TODO: reduce code duplication here; components should be registered once.
+#defaults =
+#  css:
+#    "*":
+#      margin: 0
+#      padding: 0
+#      border: 0
+#      boxSizing: "border-box"
+#      fontSize: "100%"
+#      font: "inherit"
+#      verticalAlign: "baseline"
+#    html:
+#      lineHeight: 1
+#    "ol, ul":
+#      listStyle: "none"
+#    "blockquote, q":
+#      "quotes": "none"
+#      "&:before":
+#        content: "none"
+#      "&:after":
+#        content: "none"
+#    table:
+#      borderCollapse: "collapse"
+#      borderSpacing: 0
 
-elts = [jQuery, defaults, typography, layout, header, headings, links, footnotes, 
-        lists, quote, code, image, figure, table, math, notes, toc, 
-        fontAwesome, demo, bibliography, proofs]
+
+## TODO: bring code typo here ? That would make sense. Defines font families too.
+#base = 24
+#lineHeight = base * 1.5 # prepare for rems instead of px ?
+#ratio = Math.sqrt(2)
+## TODO: use "xx-small, x-small, small, medium, large, x-large, xx-large" ?
+##       (they are actually valid *values*) --> get xLarge instead of huge.
+#small  = Math.round(base / ratio) + "px"
+#medium = Math.round(base) + "px"
+#large  = Math.round(base * ratio) + "px"
+#xLarge = Math.round(base * ratio * ratio) + "px"
+
+
+#typography =
+#  html: ->
+#    family = "Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i"
+#    link = $ "<link>",
+#      href: "https://fonts.googleapis.com/css?family=#{family}"
+#      rel: "stylesheet"
+#      type: "text/css"
+#    $("head").append link
+#  css:
+#    html:
+#      fontSize: medium
+#      fontStyle: "normal"
+#      fontWeight: "normal"
+#      fontFamily: "Source Sans Pro, sans-serif"
+#      em:
+#        fontStyle: "italic"
+#      strong:
+#        fontWeight: "bold"
+#      textRendering: "optimizeLegibility"
+#      lineHeight: lineHeight + "px"
+#      textAlign: "left"
+#      "p, .p":
+#        marginBottom: lineHeight + "px"
+#        textAlign: "justify"
+#        hyphens: "auto"
+#        MozHyphens: "auto"
+#      section:
+#        marginBottom: lineHeight + "px"
+
+#modern = [
+#  jQuery, 
+#  defaults, 
+#  typography, 
+#  layout, 
+#  header, 
+#  headings, 
+#  links, 
+#  footnotes, 
+#  lists, 
+#  quote, 
+#  code, 
+#  image, 
+#  figure, 
+#  table, 
+#  math, 
+#  notes, 
+#  toc, 
+#  fontAwesome, 
+#  demo, 
+#  bibliography, 
+#  proofs]
+
+#   
+# Apply Style Components
+# ------------------------------------------------------------------------------
+
+_theme = undefined
 
 cssify = (options) ->
   csss = []
-  for elt in elts
+  for elt in _theme
     if elt.css?
       css_ = elt.css
       if type(css_) is "function"
         css_ = css_(options)
       csss.push css_
   rules = _.merge({}, csss...)
-  css rules      
+  makeCss rules      
 
 domify = (options) ->
-  for elt in elts
+  for elt in _theme
     if elt.html?
       elt.html(options)
 
 scriptify = (options) ->
-  for elt in elts
+  for elt in _theme
     if elt.js?
       js = elt.js
       if type(js) is "function"
@@ -870,7 +1023,11 @@ main = ->
   CSSFilename = if args.s then args.s else args.style
 
   bibliographyFilenames = if args.b then args.b else args.bibliography
+  theme = if args.t then args.t else if args.theme then args.theme else "classic"
   inputHTMLFilenames = args._
+
+  # Theme selection
+  _theme = eval(theme)
 
   # If present, bibliographyFilename shall be a CSL json file.
   if bibliographyFilenames?
