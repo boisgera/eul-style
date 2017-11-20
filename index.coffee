@@ -177,7 +177,7 @@ defaults =
     #$("head").append $("<meta charset='UTF-8'></meta>")
 
 # Colors
-color = "black"
+color = "black" # TODO: remove global variable
 
 # Typography
 
@@ -890,96 +890,200 @@ classic = [
 # Modern/Slides Theme
 # ------------------------------------------------------------------------------
 
-#defaults =
-#  css:
-#    "*":
-#      margin: 0
-#      padding: 0
-#      border: 0
-#      boxSizing: "border-box"
-#      fontSize: "100%"
-#      font: "inherit"
-#      verticalAlign: "baseline"
-#    html:
-#      lineHeight: 1
-#    "ol, ul":
-#      listStyle: "none"
-#    "blockquote, q":
-#      "quotes": "none"
-#      "&:before":
-#        content: "none"
-#      "&:after":
-#        content: "none"
-#    table:
-#      borderCollapse: "collapse"
-#      borderSpacing: 0
+modern = []
 
+modern.push modern.defaults = 
+  css:
+    "*":
+      margin: 0
+      padding: 0
+      border: 0
+      boxSizing: "border-box"
+      fontSize: "100%"
+      font: "inherit"
+      verticalAlign: "baseline"
+    html:
+      lineHeight: 1
+    "ol, ul":
+      listStyle: "none"
+    "blockquote, q":
+      "quotes": "none"
+      "&:before":
+        content: "none"
+      "&:after":
+        content: "none"
+    table:
+      borderCollapse: "collapse"
+      borderSpacing: 0
 
-## TODO: bring code typo here ? That would make sense. Defines font families too.
-#base = 24
-#lineHeight = base * 1.5 # prepare for rems instead of px ?
-#ratio = Math.sqrt(2)
-## TODO: use "xx-small, x-small, small, medium, large, x-large, xx-large" ?
-##       (they are actually valid *values*) --> get xLarge instead of huge.
-#small  = Math.round(base / ratio) + "px"
-#medium = Math.round(base) + "px"
-#large  = Math.round(base * ratio) + "px"
-#xLarge = Math.round(base * ratio * ratio) + "px"
+# TODO: "sizes" should be fontSize & lineHeight objects instead
+#       (and even maybe bundled with margins ?). Aria-hidden stuff?
+#       Use blast or regexp and JQuery to deal with the code.
+#       Apperently it's not merely aria-hidden ...
+#       Mmmmm -moz-user-select:none works on Firefox.
+#       Arf, the selection looks good with Opera, but the copy is
+#       borked (even in the surge.sh example)
 
+modern.push modern.typography = do ->
+  base = 24 # 18 #24
+  lineHeight = base * 1.5
+  ratio = 2
+  tiny  = Math.round(base / ratio) + "px"
+  small  = Math.round(base / ratio) + "px"
+  medium = Math.round(base) + "px"
+  medium = 
+    fontSize: Math.round(base) + "px"
+    lineHeight: 1.5 * Math.round(base) + "px"
+  large  = 
+    fontSize: Math.round(base * ratio) + "px"
+    lineHeight: 1.0 * Math.round(base * ratio) + "px"
+  huge = 
+    fontSize: Math.round(base * ratio * ratio) + "px"
+    lineHeight: 1.0 * Math.round(base * ratio * ratio) + "px"
 
-#typography =
-#  html: ->
-#    family = "Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i"
-#    link = $ "<link>",
-#      href: "https://fonts.googleapis.com/css?family=#{family}"
-#      rel: "stylesheet"
-#      type: "text/css"
-#    $("head").append link
-#  css:
-#    html:
-#      fontSize: medium
-#      fontStyle: "normal"
-#      fontWeight: "normal"
-#      fontFamily: "Source Sans Pro, sans-serif"
-#      em:
-#        fontStyle: "italic"
-#      strong:
-#        fontWeight: "bold"
-#      textRendering: "optimizeLegibility"
-#      lineHeight: lineHeight + "px"
-#      textAlign: "left"
-#      "p, .p":
-#        marginBottom: lineHeight + "px"
-#        textAlign: "justify"
+  html = ->
+    family = "Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i"
+    link = $ "<link>",
+      href: "https://fonts.googleapis.com/css?family=#{family}"
+      rel: "stylesheet"
+      type: "text/css"
+    $("head").append link
+    family = "Titillium+Web:200,200i,300,300i,400,400i,600,600i,700,700i,900"
+    link = $ "<link>",
+      href: "https://fonts.googleapis.com/css?family=#{family}"
+      rel: "stylesheet"
+      type: "text/css"
+    $("head").append link
+  css =
+    html:
+      fontSize: medium.fontSize
+      lineHeight: medium.lineHeight
+      fontStyle: "normal"
+      fontWeight: "normal" # 300 #"normal" # fuck 300 is too thin and normal too fat.
+      fontFamily: "Source Sans Pro, sans-serif"
+      em:
+        fontStyle: "italic"
+      strong:
+        fontWeight: "bold"
+      textRendering: "optimizeLegibility"
+      textAlign: "left"
+      "p, .p, p.alt":
+        fontFamily: "Titillium Web"
+        fontSize: 24 + "px"
+        color: "black"
+        marginBottom: medium.lineHeight
+        #textAlign: "justify"
 #        hyphens: "auto"
 #        MozHyphens: "auto"
-#      section:
-#        marginBottom: lineHeight + "px"
+        color: "#2f2f2f"
+      section:
+        marginBottom: medium.lineHeight # ???
 
-#modern = [
-#  jQuery, 
-#  defaults, 
-#  typography, 
-#  layout, 
-#  header, 
-#  headings, 
-#  links, 
-#  footnotes, 
-#  lists, 
-#  quote, 
-#  code, 
-#  image, 
-#  figure, 
-#  table, 
-#  math, 
-#  notes, 
-#  toc, 
-#  fontAwesome, 
-#  demo, 
-#  bibliography, 
-#  proofs]
 
-#   
+  {base, lineHeight, ratio, tiny, small, medium, large, huge, html, css}
+
+modern.push modern.headings = do ->
+  mt = modern.typography
+  css:
+    h1:
+      fontSize: mt.huge.fontSize
+      fontWeight: 200
+      lineHeight: mt.huge.lineHeight #1.25 * mt.lineHeight + "px"
+      #marginTop: 2.0 * mt.lineHeight + "px"
+      #marginBottom: 0.75 * mt.lineHeight + "px"
+    h2:
+      fontSize: mt.large.fontSize
+      fontWeight: 200
+      lineHeight: mt.large.fontSize #mt.lineHeight + "px"
+      #marginBottom: 0.5 * mt.lineHeight + "px"
+    "h3, h4, h5, h6":
+      fontSize: mt.medium.fontSize
+      lineHeight: mt.medium.lineHeight
+      fontWeight: "bold"
+      marginRight: "1em"
+      display: "inline"
+
+modern.push modern.layout = do ->
+  mt = modern.typography
+  css:
+    html:
+      hyphens: "auto"
+      "-moz-hyphens": "auto"
+      "-webkit-hyphens": "auto"
+      "main, .main": 
+        width: "100vw"
+        height: "100vh"
+        padding: mt.large.lineHeight #mt.huge.fontSize #"5vmax" # or something like 1 em for huge text?
+      section:
+        maxWidth: "32em"
+        margin: "auto"
+      header:
+        marginBottom: mt.large.lineHeight
+      ".textbox":
+        padding: "1em"
+        margin: "0 auto"
+        boxShadow: "0 0 1em rgba(0,0,0,0.25)"
+        #boxShadow: "0px 3px 5px 0px #656565" 
+   
+modern.push modern.math = math
+
+modern.push modern.fontAwesome = fontAwesome
+
+modern.push modern.jQuery = jQuery
+
+# TODO: see how surge.sh is doing: animation, fade out of non-commands,
+#       and copy text is only the commands FFS!
+#       Mmmm the pre-wrap is NICE but sometimes the text cannot be
+#       folded (as if it was a big word) --> need blast to get to the
+#       letter level?
+modern.push modern.code = do ->
+  mt = modern.typography
+  html: ->
+    family = "Fira+Mono"#"Cousine"
+    link = $ "<link>",
+      href: "https://fonts.googleapis.com/css?family=#{family}"
+      rel: "stylesheet"
+      type: "text/css"
+    $("head").append link
+  css:
+    # need to match the x-height differently in a paragraph.
+    code:
+      fontSize: "22px" #mt.medium.fontSize
+      fontFamily: "Fira Mono" #"'Cousine', monospace"
+    pre:
+      fontSize: "22px" #mt.medium.fontSize
+      display: "block"
+      #maxWidth: "42em"
+      whiteSpace: "pre-wrap"
+      overflowX: "auto" # should be required but well ... see "# ========"
+      boxShadow: "0 0 1em rgba(0,0,0,0.25)"
+      borderRadius: "5px"
+      color: "#e8e8e8"
+      backgroundColor: "#404040"
+      marginBottom: 1 * mt.medium.lineHeight
+      paddingLeft: "1.5em"
+      paddingRight: "1.5em"
+      paddingTop: "1.5em"
+      paddingBottom: "1.5em"
+
+      code:
+        fontSize: "20px" #mt.medium.fontSize
+        lineHeight: "30px"
+        display: "inline-block"
+        maxWidth: "40em"
+
+#modern.push modern.coffeescript = 
+#  html: ->
+#    insert_script src: "https://cdnjs.cloudflare.com/ajax/libs/coffee-script/1.12.7/coffee-script.js"
+
+modern.push modern.animation =
+  html: ->
+    insert_script src: "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.2/TweenMax.min.js"
+
+modern.push modern.blast =
+  js: "js/blast.js"
+
+
 # Apply Style Components
 # ------------------------------------------------------------------------------
 
@@ -1027,7 +1131,7 @@ main = ->
   inputHTMLFilenames = args._
 
   # Theme selection
-  _theme = eval(theme)
+  _theme = eval(theme) # TODO: error handling, theme dict, etc.
 
   # If present, bibliographyFilename shall be a CSL json file.
   if bibliographyFilenames?
@@ -1096,6 +1200,8 @@ main = ->
   else # no HTML in or out, output the stylesheet (if no CSS output file).
     if aboutCSS.inline?
       console.log aboutCSS.inline
+
+
 
 main()
 
