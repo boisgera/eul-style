@@ -181,14 +181,16 @@ color = "black" # TODO: remove global variable
 
 # Typography
 
-typography = (->
-  base = 24
-  lineHeight = base * 1.5 # prepare for rems instead of px ?
-  ratio = Math.sqrt(2)
-  small  = Math.round(base / ratio) + "px"
-  medium = Math.round(base) + "px"
-  large  = Math.round(base * ratio) + "px"
-  xLarge = Math.round(base * ratio * ratio) + "px"
+typography = do ->
+  base = __base = 24
+  __lineHeight = 1.5
+  lineHeight = __base * __lineHeight # lineHeight in pixels
+  ratio = __ratio = Math.sqrt(2)
+  # TODO: try calc stuff instead (but rounding is lost? Worse, browser-dependent?)
+  small  = Math.round(__base / __ratio) + "px"
+  medium = Math.round(__base) + "px"
+  large  = Math.round(__base * __ratio) + "px"
+  xLarge = Math.round(__base * __ratio * __ratio) + "px"
 
   html = -> # TODO: check that the link is not already here ?
     family = "Alegreya+Sans:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,800,800italic,900,900italic|Alegreya+Sans+SC:400,100,300,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic|Alegreya+SC:400,400italic,700,700italic,900,900italic|Alegreya:400,700,900,400italic,700italic,900italic"
@@ -197,29 +199,32 @@ typography = (->
       rel: "stylesheet"
       type: "text/css"
     $("head").append link
+
   css = 
     html:
+      "--base": __base
+      "--lineHeight": __lineHeight
+      lineHeight: lineHeight + "px" # use rems instead.
       fontSize: medium
+      fontFamily: "Alegreya, serif"
       fontStyle: "normal"
       fontWeight: "normal"
-      fontFamily: "Alegreya, serif"
       em:
         fontStyle: "italic"
       strong:
         fontWeight: "bold"
       textRendering: "optimizeLegibility"
-      lineHeight: lineHeight + "px"
       textAlign: "left"
-      "p, .p":
+      "p, .p": # TODO: remove margin when p is "boxed" and last.
         marginBottom: lineHeight + "px"
         textAlign: "justify"
         hyphens: "auto"
         MozHyphens: "auto"
-      section:
+      section: # TODO: see above wrt boxed content.s
         marginBottom: lineHeight + "px"
 
    return {base, lineHeight, ratio, small, medium, large, xLarge, html, css}
-)()
+
       
 layout =
   css:
