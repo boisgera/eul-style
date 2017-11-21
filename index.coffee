@@ -869,6 +869,9 @@ proofs =
         
   js: "js/proofs.js"
 
+previews = 
+  js: "js/preview.js"
+
 classic = [
   jQuery, 
   defaults, 
@@ -890,7 +893,8 @@ classic = [
   fontAwesome, 
   demo, 
   bibliography, 
-  proofs]
+  proofs,
+  previews]
 
 # Modern/Slides Theme
 # ------------------------------------------------------------------------------
