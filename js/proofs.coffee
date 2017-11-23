@@ -4,14 +4,25 @@
 # TODO: need to preserve the event handlers from the section contents.
 
 hide_proof = (sectionWrapper) ->
-  sectionWrapper.find(".expand").css
+ 
+  w$ = (x) -> sectionWrapper.find x
+
+  w$(".expand").css
     visibility: "visible"
-  sectionWrapper.find(".header-wrapper").css 
+
+  w$(".header-wrapper").css 
     visibility: "visible"
     height: ""
-  sectionWrapper.find("section").first().css 
+
+  w$("section").first().css 
     visibility: "hidden"
     height: "0px"
+
+  w$(".header-wrapper").attr 
+    id: w$("section").first().attr "id"
+  w$("section").first().attr id: ""
+
+
 
 #  # clone the section, wrap the clone into an invisible div
 #  clone = section.clone(true)
@@ -43,14 +54,23 @@ hide_proof = (sectionWrapper) ->
 #  section.find("i.expand").on "click", -> show_proof(section)
 
 show_proof = (sectionWrapper) ->
-  sectionWrapper.find(".expand").css
+
+  w$ = (x) -> sectionWrapper.find x
+
+  w$(".expand").css
     visibility: "hidden"
-  sectionWrapper.find(".header-wrapper").css 
+
+  w$(".header-wrapper").css 
     visibility: "hidden"
     height: "0"
-  sectionWrapper.find("section").first().css 
+
+  w$("section").first().css 
     visibility: "visible"
     height: ""
+
+  w$("section").first().attr 
+    id: w$(".header-wrapper").attr "id"
+  w$(".header-wrapper").attr id: ""
 
 #  # get rid of the minimized proof, restore the section contents.
 #  section.children().first().remove()

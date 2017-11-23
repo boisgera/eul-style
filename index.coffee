@@ -87,7 +87,6 @@ String::startsWith = (string) ->
 
 # CSS
 # ------------------------------------------------------------------------------
-
 toDash = (string) ->
   string.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()
 
@@ -254,6 +253,9 @@ layout =
 #      marginLeft: "20%"
 
 
+# Table of Contents
+# ------------------------------------------------------------------------------
+#
 # TODO: 
 #   - solve bugs with duplicated entries in TOC. .......................... DONE
 #     That's related to how pandoc generates TOC entries for headings that
@@ -305,6 +307,12 @@ sanitize = ($, elt) -> # fix the nested anchor problem in TOCs.
     if first.tagName is "A" and second.tagName is "A"
       $(first).remove()
 
+removeEmptySections = (toc) ->
+  for li in toc.find("li")
+    if $(li).find("a").text() == ""
+      $(li).remove()
+  # Need to remove empty uls now (from below to the top?)
+    
 trim_period = (text) -> 
   if text[text.length-1] is "." and text[text.length-2] isnt "."
     text = text[...-1]
@@ -335,6 +343,12 @@ wrapInBadge = (label) ->
 toc = 
   html: ->
     toc = $("nav#TOC")
+
+    if toc.length
+      toc.find("li").each -> sanitize($, $(this))
+
+      removeEmptySections(toc)
+
     if toc.length
       toc.find("li").each -> sanitize($, $(this))
       top_lis = toc.children("ul").children("li")
@@ -501,6 +515,8 @@ header =
   # TODO: remove the float: left; instead turn the heading inline and insert it
   #       into the next paragraph (if any).
 
+# Headings
+# -----------------------------------------------------------------------------
 headings =
   css:
     h1:
@@ -523,6 +539,10 @@ headings =
   html: ->
     subsubheadings = $("h3, h4, h5, h6")
     for heading in subsubheadings
+      # if the heading is empty, squeeze it.
+      if $(heading).find("a").first().text() is ""
+        $(heading).css marginRight: "0"
+      # wrap the heading into the first paragraph in a pseudo-paragraph
       next = $(heading).next()
       if next.is("p")
         next.replaceWith("<div class='p'>" + next.html() + "</span>")
@@ -723,9 +743,6 @@ jQuery =
   html: ->
     insert_script src: "https://code.jquery.com/jquery-3.0.0.min.js"
   
-demo =
-  js: "js/demo.js"
-
 title_case = (text) ->
   no_cap = "a an the and but or for nor aboard about above across after against
 along amid among around as at atop before behind below beneath beside between
@@ -891,7 +908,6 @@ classic = [
   notes, 
   toc, 
   fontAwesome, 
-  demo, 
   bibliography, 
   proofs,
   previews]
