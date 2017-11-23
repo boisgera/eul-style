@@ -5,6 +5,9 @@
 
 hide_proof = (sectionWrapper) ->
  
+  sectionWrapper.removeClass "expanded" 
+  sectionWrapper.addClass "minimized" 
+
   w$ = (x) -> sectionWrapper.find x
 
   w$(".expand").css
@@ -55,6 +58,9 @@ hide_proof = (sectionWrapper) ->
 
 show_proof = (sectionWrapper) ->
 
+  sectionWrapper.removeClass "minimized"
+  sectionWrapper.addClass "expanded" 
+
   w$ = (x) -> sectionWrapper.find x
 
   w$(".expand").css
@@ -99,7 +105,7 @@ box = (section) ->
     bottom: "0.75rem"
     right: "0.75rem"
 
-  wrapper = $("<div></div>")
+  wrapper = $("<div class='proof-wrapper expanded'></div>")
   wrapper.css
     position: "relative"
     margin: "-0.75rem -0.75rem 0.75rem -0.75rem"
@@ -148,4 +154,13 @@ main = ->
     wrapper = box(section)
     hide_proof(wrapper)
 
+  $(document).keydown (event) ->
+    console.log "***", event.keyCode
+    if event.keyCode is 88
+      for sectionWrapper in $(".proof-wrapper.minimized")
+        show_proof $(sectionWrapper)
+    if event.keyCode is 77
+      for sectionWrapper in $(".proof-wrapper.expanded")
+        hide_proof $(sectionWrapper)
+        
 $ main
