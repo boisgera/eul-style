@@ -14,17 +14,17 @@
 # ------------------------------------------------------------------------------
 
 # Standard Node Library
-fs = require "fs"
-path = require "path"
-process = require "process"
+fs               = require "fs"
+path             = require "path"
+process          = require "process"
 {exec, execSync} = require "child_process"
 
 # Third-Party Libraries
 coffeescript = require "coffee-script"
-jquery = require "jquery"
-jsdom = require "jsdom"
-parseArgs = require "minimist"
-_ = require "lodash"
+jquery       = require "jquery"
+jsdom        = require "jsdom"
+parseArgs    = require "minimist"
+_            = require "lodash"
 
 # Custom Libraries
 cssify = require "@boisgera/cssify"
@@ -36,13 +36,15 @@ type = (item) ->
   Object::toString.call(item)[8...-1].toLowerCase()
 
 String::capitalize = ->
-    this.charAt(0).toUpperCase() + this.slice(1)
+    this[...1].toUpperCase() + this[1...]
 
 String::decapitalize = ->
+    this[...1].toLowerCase() + this[1...]
     this.charAt(0).toLowerCase() + this.slice(1)
 
 String::startsWith = (string) ->
     this[...string.length] is string
+
 
 # Insert Scripts for Runtime
 # ------------------------------------------------------------------------------
@@ -71,7 +73,7 @@ classic.push defaults =
       boxSizing: "content-box" # transition to "border-box" ? study the impact.
       fontSize: "100%"
       font: "inherit"
-      verticalAlign: "fontSizeline"
+      verticalAlign: "baseline"
     html:
       lineHeight: 1
     "ol, ul":
@@ -99,40 +101,84 @@ classic.push color =
     html: 
       "--color": "black"
 
-# ### Typography
-#
-# We use quantities as numbers, without explicit units in javascript
-# since this is the only sane way to make computations.
-# OTOH  we have to track/remember what their unit is and
-# convert it to a string with the appropriate unit for CSS.
-# In CSS, we can also do some (limited) computations with `calc`
-# if this is needed.
-#
-# When we need these values for other components, should we pull
-# the info from js or from css? If we do from JS, we need to add
-# the unit back but we have a decent syntax otherwise (namespaced name, etc.); 
-# from CSS we have to use the weird calc/var and "--" notation combo
-# but it may change at runtime (*maybe*, if we put ALMOST ALL computations
-# in CSS, but we don't use this, right? And we don't need this either!)
+### Typography
+
+NOTA: We use quantities as numbers, without explicit units in javascript
+since this is the only sane way to make computations.
+OTOH  we have to track/remember what their unit is and
+convert it to a string with the appropriate unit for CSS.
+In CSS, we can also do some (limited) computations with `calc`
+if this is needed.
+
+When we need these values for other components, should we pull
+the info from js or from css? If we do from JS, we need to add
+the unit back but we have a decent syntax otherwise (namespaced name, etc.); 
+from CSS we have to use the weird calc/var and "--" notation combo
+but it may change at runtime (*maybe*, if we put ALMOST ALL computations
+in CSS, but we don't use this, right? And we don't need this either!)
+
+###
+
+# TODO: rethink the JS vs CSS for variables (get rid of custom properties ?)
 
 classic.push typography = do ->
   baseFontSize   = 24 # [px]
   baseLineHeight = 1.5 * baseFontSize # [px]
-  scaleRatio = Math.sqrt(2)
+  scaleRatio     = Math.sqrt(2) # (unitless)
 
-  # Get rid of this? Use CSS "calc" instead ?
+  # Modular scale
   small  = Math.round(baseFontSize / scaleRatio)
   medium = Math.round(baseFontSize)
   large  = Math.round(baseFontSize * scaleRatio)
   xLarge = Math.round(baseFontSize * scaleRatio * scaleRatio)
+
+  # TODO: rethink the "family" name & concept? What happens when
+  #       your design mixes several fonts? For example when you
+  #       need to deal with code? Add an (optional) positional 
+  #       argument ? Which would be the "type"/"role" ?
+  #       E.g. it could be "code" ? Dunno ...
+
+  # Family variant selector. Would "variant" be a better name here?
+  family = (options) ->
+    options ?= {}
+    options.serif = true
+    options.smallCaps = false
+
+    name = "Alegreya"
+    if not options.serif
+      name += " Sans"
+    if options.smallCaps
+      name += " SC"
+
+    # Shall we do this? At all? And here?
+    if options.serif
+      name += ", serif"
+    else
+      name += ", sans-serif"
+    name
 
   {
     baseFontSize, baseLineHeight, scaleRatio, 
     
     small, medium, large, xLarge,
 
+    family,
+
     html: ->
-      family = "Alegreya+Sans:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,800,800italic,900,900italic|Alegreya+Sans+SC:400,100,300,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic|Alegreya+SC:400,400italic,700,700italic,900,900italic|Alegreya:400,700,900,400italic,700italic,900italic"
+      family = "
+        Alegreya: 400,700,900,400italic,700italic,900italic
+        |
+        Alegreya+SC:400, 700, 900,
+                    400italic, 700italic, 900italic
+        |
+        Alegreya+Sans: 100, 300, 400, 500, 700, 800, 900
+                       100italic, 300italic, 400italic, 500italic, 700italic, 
+                       800italic, 900italic              
+        |
+        Alegreya+Sans+SC: 100, 300, 400, 500, 700, 800, 900,
+                          100italic, 300italic, 400italic, 500italic, 700italic,
+                          800italic, 900italic
+        "
       link = $ "<link>",
         href: "https://fonts.googleapis.com/css?family=#{family}"
         rel: "stylesheet"
@@ -144,14 +190,14 @@ classic.push typography = do ->
         "--base-font-size": baseFontSize + "px"
         "--base-line-height": baseLineHeight + "px"
         "--scale-ratio": scaleRatio
-        "--small": small + "px"    # TODO: 'calc'ify this?
-        "--medium": medium + "px"  #
-        "--large": large + "px"    #
-        "--x-large": xLarge + "px" #
+        "--small": small + "px"    
+        "--medium": medium + "px"
+        "--large": large + "px"
+        "--x-large": xLarge + "px"
 
         lineHeight: "var(--base-line-height)"
         fontSize: medium + "px"
-        fontFamily: "Alegreya, serif"
+        fontFamily: family serif: true
         fontStyle: "normal"
         fontWeight: "normal"
         em:
@@ -317,56 +363,51 @@ toc =
       toc.replaceWith(section)
 
   css:
-    "nav#TOC > ul":
-      position: "relative"
-      fontWeight: "bold"
-      "> *":
-        marginBottom: "var(--base-line-height)"
-      li:
-        listStyleType: "none"
-        marginLeft: 0
-        paddingLeft: 0
-      ul:
-        li: 
-          marginLeft: "var(--base-line-height)"
-          fontWeight: "normal"
+    "nav#TOC": 
+      "> ul":
+        position: "relative"
+        fontWeight: "bold"
+        "> *":
+          marginBottom: "var(--base-line-height)"
+        li:
+          listStyleType: "none"
+          marginLeft: 0
+          paddingLeft: 0
+        ul:
+          li: 
+            marginLeft: "var(--base-line-height)"
+            fontWeight: "normal"
+        "> li.top-li":
+          marginBottom: 0
+          paddingBottom: "var(--base-line-height)"
+          borderWidth: "2px 0 0 0"
+          borderStyle: "solid"
+          "&:last-child":
+            borderWidth: "2px 0 2px 0"
+     ".badge":
+        position: "relative"
+        bottom: "0.13em"
+        fontFamily: typography.family serif: false, smallCaps: true
+        fontWeight: "300"
+        fontSize: "var(--small)"
+        display: "inline-block"
+        lineHeight: "1.2em"
+        height: "1.2em"
+        width: "2em"
+        textAlign: "center"
+        borderRadius: "2px"
+        backgroundColor: "#f0f0f0"
+        verticalAlign: "baseline"
+        boxShadow: "0px 1.0px 1.0px #aaa"
+        marginRight: "1em"
     ".section-flag": # TODO: shift a bit down.
       lineHeight: "var(--base-line-height)"
-      fontSize: typography.small
+      fontSize: "var(--small)"
       fontWeight: "300"
-      fontFamily: "Alegreya Sans SC"
+      fontFamily: typography.family serif: false, smallCaps: true
       marginBottom: 0
-    "nav#TOC > ul > li.top-li":
-      marginBottom: 0
-      paddingBottom: "var(--base-line-height)"
-      borderWidth: "2px 0 0 0"
-      borderStyle: "solid"
-    "nav#TOC > ul > li.top-li:last-child":
-      borderWidth: "2px 0 2px 0"
-    "nav#TOC .badge":
-      position: "relative"
-      bottom: "0.13em"
-      fontFamily: "Alegreya Sans SC"
-      fontWeight: "300"
-      fontSize: typography.small
-      display: "inline-block"
-      lineHeight: "1.2em"
-      height: "1.2em"
-      width: "2em"
-      textAlign: "center"
-      #borderStyle: "solid"
-      #borderWidth: "1px"
-      borderRadius: "2px"
-      backgroundColor: "#f0f0f0"
-      verticalAlign: "baseline"
-      boxShadow: "0px 1.0px 1.0px #aaa"
-      marginRight: "1em"
-      #marginLeft: "1em"
-#      ":hover":
-#        background: "#fff0f0"
 
-
-
+# ### Notes
 notes =
   html: ->
     notes = $("section.footnotes")
@@ -374,11 +415,10 @@ notes =
     if notes.length
       notes.prepend $("<h1><a href='#notes'>Notes</a></h1>")
       toc_ = $("nav#TOC")
-      if toc_.length
+      if toc_.length > 0
         toc_.children().first().append $("<li><a href='#notes'>Notes</a></li>")
 
-  css: {}
-
+# ### Header
 header =
   css:
     main:
@@ -402,7 +442,7 @@ header =
           marginBottom: "calc(0.5 * var(--base-line-height))"
           fontWeight: "normal"
         ".date":
-          fontFamily: 'Alegreya SC, serif'
+          fontFamily: typography.family smallCaps: true
           lineHeight: "calc(1 * var(--base-line-height))"
           fontSize: typography.medium + "px"
           fontWeight: "normal"
@@ -497,6 +537,7 @@ quote =
       "p:last-child":
         marginBottom: "0px"
 
+# Code Blocks 
 code =
   html: ->
     family = "Inconsolata:400,700"
