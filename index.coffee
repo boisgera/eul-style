@@ -60,11 +60,10 @@ insert_script = (options) ->
     window.document.head.appendChild script
 
 
-# Classic Theme
-# ------------------------------------------------------------------------------
-classic = []
 
-classic.push defaults =
+# CSS Reset
+# ------------------------------------------------------------------------------
+defaults =
   css:
     "*":
       margin: 0
@@ -96,13 +95,15 @@ classic.push defaults =
 #            # (darker, lighter, etc.
 #            # TODO: find all places where i use color, reduce the
 #            # number of greys.
-classic.push color = 
+color = 
   css: 
     html: 
       "--color": "black"
 
-### Typography
+# Typography
+# ------------------------------------------------------------------------------
 
+###
 NOTA: We use quantities as numbers, without explicit units in javascript
 since this is the only sane way to make computations.
 OTOH  we have to track/remember what their unit is and
@@ -121,7 +122,7 @@ in CSS, but we don't use this, right? And we don't need this either!)
 
 # TODO: rethink the JS vs CSS for variables (get rid of custom properties ?)
 
-classic.push typography = do ->
+typography = do ->
   baseFontSize   = 24 # [px]
   baseLineHeight = 1.5 * baseFontSize # [px]
   scaleRatio     = Math.sqrt(2) # (unitless)
@@ -236,49 +237,10 @@ layout =
 
 # Table of Contents
 # ------------------------------------------------------------------------------
-#
-# TODO: 
-#   - solve bugs with duplicated entries in TOC. .......................... DONE
-#     That's related to how pandoc generates TOC entries for headings that
-#     contain links :(. It generate nested links, which is not kosher.
-#     Correct this at the eul-link level ? Hope that the nested anchors are
-#     still accessible as such (not already corrected) and "disable" the
-#     inner link? Otherwise ... find another plan ... Detect multiple
-#     anchors (in childrens of li's) and patch the result.
-#
-#   - offset a little (downward) the "Section ???" flag.
-#
-#   - solve space that is too wide at the end of the TOC.
-#     adapt by converting the last padding into a margin,
-#     that should collapse with the following header margin.
-#     Mmmmmm .... will look like shit if I have to change the
-#     background color ... add some solid top border instead?
-#     Why the fuck is it not already there?
-#     Because I am putting it on the top. Add a bottom stuff
-#     for the last element too.
-#
-#   - analyze tagged contents, substitute labels.
-#
-#   - organize tags ? Group by kind ? Associate proofs with the statement?
-#
-#   - section / toc for figures (what title ?). Title starts the caption
-#     and is bold (whenever it exists)?
-#
-#   - adjust indents
-#
-#   - caret / arrow stuff (inactive for now)
-#
-#   - add SC Light Section + number on top of top-level heading
-#
-#   - rule between top-level sections
-#
-#   - control spacing.
-#
-#   - TODO: align badges properly, try some color schemes ? (grey first)?
 
 sanitize = ($, elt) -> # fix the nested anchor problem in TOCs.
-  # (this is illegal, the DOM automatically closes the first anchor when
-  # the second one comes.
+  # (this is illegal, the DOM automatically closes the first anchor 
+  # when the second one opens).
   # Quick & dirty fix: if the elt starts with two anchors, 
   # remove the first one.
   children = elt.children()
@@ -300,7 +262,8 @@ trim_period = (text) ->
   return text
 
 split_types_text = (text) ->
-  section_types = "Theorem Lemma Proposition Corollary 
+  section_types = "
+    Theorem Lemma Proposition Corollary 
     Definition Remark Example Examples 
     Question Questions Answer Answers".split(" ")
   separators = "–&,"
@@ -308,7 +271,7 @@ split_types_text = (text) ->
   sep_regexp = new RegExp(pattern)
   parts = text.split(sep_regexp)
   types = []
-  while parts.length
+  while parts.length > 0
     if parts[0].trim() in section_types
       types.push parts.shift().trim()
       parts.shift() # remove the separator
@@ -317,7 +280,7 @@ split_types_text = (text) ->
   text = parts.join("").trim()
   return [types, text]
       
-wrapInBadge = (label) ->
+Badge = (label) ->
   label = label[...3].toLowerCase()
   $("<span class='badge'>#{label}<span>")
 
@@ -342,19 +305,13 @@ toc =
             $(anchor).remove()
           text = trim_period text
           [types, subtext] = split_types_text text
-          #console.warn "*", [types, subtext]
           if types.length
               $(anchor).html(subtext or text)
-              #$(anchor).parent().append(wrapInBadge($, t)) for t in types
 
               # TODO: stack multiple badges (use z-index) ?
+              # tmp: keep only the first type tag.
+              $(anchor).parent().prepend Badge(types[0])
 
-              # TMP: keep only the first type tag.
-              $(anchor).parent().prepend wrapInBadge(types[0])
-              #$(anchor).parent().prepend(wrapInBadge(t)) for t in types.reverse()
-              
-      #top_lis.prepend($("<i class='fa fa-caret-down'></i>"))
-      #top_lis.children("i").after(" ")
       for li, n in top_lis
         $(li).prepend("<p class='section-flag'>section #{n + 1}</p>")
       section = $("<section id='contents' class='level1' ></section>")
@@ -407,7 +364,8 @@ toc =
       fontFamily: typography.family serif: false, smallCaps: true
       marginBottom: 0
 
-# ### Notes
+# Notes
+# ------------------------------------------------------------------------------
 notes =
   html: ->
     notes = $("section.footnotes")
@@ -418,7 +376,9 @@ notes =
       if toc_.length > 0
         toc_.children().first().append $("<li><a href='#notes'>Notes</a></li>")
 
-# ### Header
+
+# Header
+# ------------------------------------------------------------------------------
 header =
   css:
     main:
@@ -454,6 +414,7 @@ header =
 
   # TODO: remove the float: left; instead turn the heading inline and insert it
   #       into the next paragraph (if any).
+
 
 # Headings
 # -----------------------------------------------------------------------------
@@ -492,6 +453,8 @@ headings =
           $("<br>").insertAfter($(heading)) 
 
 
+# Links
+# ------------------------------------------------------------------------------
 links =
   css:
     a:
@@ -505,12 +468,18 @@ links =
       "&:visited":
         color: "var(--color)"
 
+
+# Footnotes
+# ------------------------------------------------------------------------------
 footnotes =
   css:
     sup:
       verticalAlign: "super"
       lineHeight: 0
 
+
+# Lists
+# ------------------------------------------------------------------------------
 lists =
   css:
     li:
@@ -526,6 +495,9 @@ lists =
       li:
         listStyle: "decimal"
 
+
+# Quotes
+# ------------------------------------------------------------------------------
 quote =
   css:
     blockquote:
@@ -537,7 +509,9 @@ quote =
       "p:last-child":
         marginBottom: "0px"
 
-# Code Blocks 
+
+# Code & Code Blocks 
+# ------------------------------------------------------------------------------
 code =
   html: ->
     family = "Inconsolata:400,700"
@@ -559,9 +533,9 @@ code =
       paddingTop : "var(--base-line-height)"
       paddingBottom : "var(--base-line-height)"
 
+
 # Image & Figures
 # ------------------------------------------------------------------------------
-
 width_percentage = (image_filename) ->
   latex_width_in = 345.0 / 72.27 # standard LaTeX doc: 345.0 TeX points.
   density = execSync("identify -format '%x' '" + image_filename + "'").toString()
@@ -602,8 +576,9 @@ figure =
       textAlign: "justify"
       #align: "left"
 
-# ------------------------------------------------------------------------------
 
+# Tables
+# ------------------------------------------------------------------------------
 table =
   html: ->
     $("table").wrap("<div class='table'></div>");
@@ -629,6 +604,9 @@ table =
 # TODO: need to implement the overflow without an extra "block" that would
 #       get the formula "out" of the current parapgraph and mess up spacing.
 
+
+# MathJax
+# ------------------------------------------------------------------------------
 math = # if $(".math").length guard ? "force" option?
   css:
     ".MJXc-display":
@@ -673,6 +651,8 @@ math = # if $(".math").length guard ? "force" option?
       # can also be set to true without issues.
 
 
+# Font Awesome
+# ------------------------------------------------------------------------------
 fontAwesome = 
   html: ->
     link = $ "<link>",
@@ -680,10 +660,15 @@ fontAwesome =
       href: "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
     $("head").append link
 
+# JQuery
+# ------------------------------------------------------------------------------
 jQuery =
   html: ->
     insert_script src: "https://code.jquery.com/jquery-3.0.0.min.js"
-  
+ 
+ 
+# Bibliography
+# ------------------------------------------------------------------------------
 title_case = (text) ->
   no_cap = "a an the and but or for nor aboard about above across after against
 along amid among around as at atop before behind below beneath beside between
@@ -790,9 +775,8 @@ bibliography =
         if entry.DOI?
           $(li).append("  / DOI: <a href='https://doi.org/#{entry.DOI}'><i style='font-size:18px'class='fa fa-link'></i></a>")
 
-
+# Proofs
 # ------------------------------------------------------------------------------
-   
 containsTombstone = (elt) ->
   if elt[0].outerHTML.indexOf("\\blacksquare") > -1
     return true
@@ -827,9 +811,15 @@ proofs =
         
   js: "js/proofs.js"
 
+
+# Previews
+# ------------------------------------------------------------------------------
 previews = 
   js: "js/preview.js"
 
+
+# 'Classic' Theme
+# ------------------------------------------------------------------------------
 classic = [
   jQuery, 
   defaults, 
@@ -853,10 +843,11 @@ classic = [
   proofs,
   previews]
 
+
 # Modern/Slides Theme
 # ------------------------------------------------------------------------------
 
-# Broken ATM
+# WARNING: broken ATM due to updates in the classic theme !!!
 
 modern = []
 
@@ -1169,8 +1160,6 @@ main = ->
   else # no HTML in or out, output the stylesheet (if no CSS output file).
     if aboutCSS.inline?
       console.log aboutCSS.inline
-
-
 
 main()
 
