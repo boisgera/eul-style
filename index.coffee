@@ -142,14 +142,15 @@ typography = do ->
   # Family variant selector. Would "variant" be a better name here?
   family = (options) ->
     options ?= {}
-    options.serif = true
-    options.smallCaps = false
+    options.serif ?= true
+    options.smallCaps ?= false
 
     name = "Alegreya"
     if not options.serif
       name += " Sans"
     if options.smallCaps
       name += " SC"
+    name = "'#{name}'"
 
     # Shall we do this? At all? And here?
     if options.serif
@@ -166,20 +167,10 @@ typography = do ->
     family,
 
     html: ->
-      family = "
-        Alegreya: 400,700,900,400italic,700italic,900italic
-        |
-        Alegreya+SC:400, 700, 900,
-                    400italic, 700italic, 900italic
-        |
-        Alegreya+Sans: 100, 300, 400, 500, 700, 800, 900
-                       100italic, 300italic, 400italic, 500italic, 700italic, 
-                       800italic, 900italic              
-        |
-        Alegreya+Sans+SC: 100, 300, 400, 500, 700, 800, 900,
-                          100italic, 300italic, 400italic, 500italic, 700italic,
-                          800italic, 900italic
-        "
+      family = "Alegreya: 400,700,900,400italic,700italic,900italic" +
+        "|Alegreya+SC:400,700,900,400italic,700italic,900italic" +
+        "|Alegreya+Sans:100,300,400,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic" +              
+        "|Alegreya+Sans+SC:100,300,400,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic"
       link = $ "<link>",
         href: "https://fonts.googleapis.com/css?family=#{family}"
         rel: "stylesheet"
@@ -364,7 +355,8 @@ toc =
       fontFamily: typography.family serif: false, smallCaps: true
       marginBottom: 0
 
-# Notes
+
+# Footnotes
 # ------------------------------------------------------------------------------
 notes =
   html: ->
@@ -398,7 +390,7 @@ header =
         ".author":
           fontSize: typography.medium + "px"
           lineHeight: "calc(1 * var(--base-line-height))"
-  #        paddingTop: "1.5px" # makes the "true" fontSizeline periodic (48 px)
+  #        paddingTop: "1.5px" # makes the "true" baseline periodic (48 px)
           marginBottom: "calc(0.5 * var(--base-line-height))"
           fontWeight: "normal"
         ".date":
