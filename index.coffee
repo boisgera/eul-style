@@ -584,14 +584,14 @@ table =
       padding: 0 # transfer in reset/defaults ?
       marginLeft: "auto"
       marginRight: "auto" 
-      borderSpacing: "1em " + (typography.lineHeight - typography.fontSize) + "px" # WTF ?
+      borderSpacing: "1em " + (typography.baseLineHeight - typography.baseFontSize) + "px" # WTF ?
       borderCollapse: "collapse"
       borderTop: "medium solid black"
       borderBottom: "medium solid black"
     thead:
       borderBottom: "medium solid black"
     "td, th":
-      padding: 0.5 * (typography.baselineHeight - typography.baseFontSize) + "px" + " 0.5em" # WTF ?
+      padding: 0.5 * (typography.baseLineHeight - typography.baseFontSize) + "px" + " 0.5em" # WTF ?
 
 # TODO: need to implement the overflow without an extra "block" that would
 #       get the formula "out" of the current parapgraph and mess up spacing.

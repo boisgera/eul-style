@@ -23,15 +23,15 @@
     "js"
   ],
   "dependencies": {
+    "@boisgera/cssify": "0.0.4",
     "blast-text": "^2.0.0",
-    "coffee-script": "^1.10.0",
-    "jquery": "^2.2.0",
-    "jsdom": "^8.0.2",
-    "lodash": "^4.17.4",
+    "jquery": "^2.2.4",
+    "jsdom": "^8.5.0",
+    "lodash": "^4.17.10",
     "minimist": "^1.2.0",
     "process": "^0.11.2"
   },
   "devDependencies": {
-    "coffee-script": "^1.10.0"
+    "coffee-script": "^1.12.7"
   }
 }
