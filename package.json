@@ -32,6 +32,7 @@
     "process": "^0.11.2"
   },
   "devDependencies": {
+    "@boisgera/cssify": "0.0.4",
     "coffee-script": "^1.12.7"
   }
 }
