@@ -1,10 +1,10 @@
 {
   "name": "eul-style",
-  "version": "1.0.6",
+  "version": "1.0.5",
   "description": "Apply eul's style.",
   "scripts": {
     "prepublish": "npm run build",
-    "build": "./build"
+    "build": "coffee -c --bare index.coffee && mv index.js _index.js && echo '#!/usr/bin/env node\n' > index.js && cat _index.js >> index.js && rm _index.js"
   },
   "repository": {
     "type": "git",
@@ -23,16 +23,14 @@
     "js"
   ],
   "dependencies": {
-    "@boisgera/cssify": "0.0.4",
-    "blast-text": "^2.0.0",
-    "jquery": "^3.6.0",
-    "jsdom": "^8.5.0",
-    "lodash": "^4.17.10",
+    "coffee-script": "^1.10.0",
+    "jquery": "^2.2.0",
+    "jsdom": "^8.0.2",
+    "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "process": "^0.11.2"
   },
   "devDependencies": {
-    "@boisgera/cssify": "0.0.4",
-    "coffee-script": "^1.12.7"
+    "coffee-script": "^1.10.0"
   }
 }

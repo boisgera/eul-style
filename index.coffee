@@ -3,12 +3,10 @@
 # Usage
 # ------------------------------------------------------------------------------
 #
-#     $ eul-style [--theme=NAME]         # 'classic'
-#                 [--style=output.css] 
+#     $ eul-style [--style=output.css] 
 #                 [--html=output.html] 
 #                 [input.html]
 #
-
 
 # Imports
 # ------------------------------------------------------------------------------
@@ -46,25 +44,23 @@ String::startsWith = (string) ->
     this[...string.length] is string
 
 
-# Insert Scripts for Runtime
+# Insert Scripts into HTML
 # ------------------------------------------------------------------------------
-insert_script = (options) ->
-    # Use DOM API instead of JQuery that adds weird script tags
-    # (the Node DOM actually tries to interpret the script AFAICT ...)
+insert_script = ({uri, src}) ->
+    # ⚠️ Use DOM API instead of JQuery. 
+    # When used, jquery adds weird script tags 
+    # (AFAICT the jsdom tries to interpret the script upon insertion...)
     script = window.document.createElement "script"
     script.type = "text/javascript"
-    if options.src?
-      script.src = options.src
-    if options.text? 
-      script.text = options.text
+    script.src = uri unless not uri
+    script.text = src unless not uri
     window.document.head.appendChild script
 
 
-
-# CSS Reset
+# Custom CSS Reset
 # ------------------------------------------------------------------------------
 defaults =
-  css:
+  css: ->
     "*":
       margin: 0
       padding: 0
@@ -96,7 +92,7 @@ defaults =
 #            # TODO: find all places where i use color, reduce the
 #            # number of greys.
 color = 
-  css: 
+  css: ->
     html: 
       "--color": "black"
 
@@ -177,7 +173,7 @@ typography = do ->
         type: "text/css"
       $("head").append link
 
-    css:
+    css: ->
       html:
         "--base-font-size": baseFontSize + "px"
         "--base-line-height": baseLineHeight + "px"
@@ -204,22 +200,15 @@ typography = do ->
           hyphens: "auto"
           MozHyphens: "auto"
         section: # TODO: see above wrt boxed content.
-          marginBottom: "var(--base-line-height_px)"
+          marginBottom: "var(--base-line-height)"
   }
       
 # TODO: import lineHeight somehow as "unit" in layout?
 
 layout =
-  css:
+  css: ->
     html:
-      "main": # pfff not body (adapt pandoc build to have another top-level component.
-              # the easiest thing to do is probably to have a "main" class, 
-              # it's flexible wrt the actual tag soup ...)
-              # I don't remember exactly but am I using some preprocessing
-              # to introduce "main" elt in pandoc output?
-        # Nota: this is probably the only place where we want content-box model,
-        #       so define border-box in defaults to everything.
-
+      body:
         boxSizing: "content-box" # check this ... check that 32 em applies to
         maxWidth: "32em"         # the text WITHOUT the padding.
         margin: "auto"
@@ -306,11 +295,23 @@ toc =
       for li, n in top_lis
         $(li).prepend("<p class='section-flag'>section #{n + 1}</p>")
       section = $("<section id='contents' class='level1' ></section>")
-      section.append($("<h1><a href='#contents'>Contents</a></h1>"))
+      # section.append($('<h1><a href="#contents">Contents</a></h1>'))
       section.append(toc.clone())
-      toc.replaceWith(section)
 
-  css:
+      # section.prepend('<h1 style="position: relative; left:-1em;">
+      #   <i class="fa fa-caret-right" style="width: 1em;"></i><a href="#contents">Contents</a>
+      #   <h1>')
+
+      details = $('<details style="margin-bottom:calc(2 * var(--base-line-height))">
+      <summary><a href="#contents"><span style="font-weight:bold">Contents</span></a></summary>
+      </detail>')
+      details.append(section)
+
+      toc.replaceWith(details)
+
+  css: ->
+    "p.section-flag":
+        margin: "0"
     "nav#TOC": 
       "> ul":
         position: "relative"
@@ -355,6 +356,7 @@ toc =
       fontFamily: typography.family serif: false, smallCaps: true
       marginBottom: 0
 
+  js: -> src: "js/toc.js" # Add open/close stuff
 
 # Footnotes
 # ------------------------------------------------------------------------------
@@ -372,8 +374,8 @@ notes =
 # Header
 # ------------------------------------------------------------------------------
 header =
-  css:
-    main:
+  css: ->
+    body:
       "> header, > .header, > #header": # child of body is probably not appropriate ...
                   # instead, search for "a top-level section" (main, article, 
                   # class="main", etc.) and select the headers that are children
@@ -382,6 +384,7 @@ header =
         marginTop: "calc(2 * var(--base-line-height))"
         marginBottom: "calc(2 * var(--base-line-height))"
         h1:
+          textAlign: "left"
           fontSize: typography.xLarge + "px"
           lineHeight: "calc(1.5 * var(--base-line-height))"
           marginTop: 0.0   # compensate somewhere else, here
@@ -411,7 +414,7 @@ header =
 # Headings
 # -----------------------------------------------------------------------------
 headings =
-  css:
+  css: ->
     h1:
       fontSize: typography.large + "px"
       fontWeight: "bold"
@@ -448,7 +451,7 @@ headings =
 # Links
 # ------------------------------------------------------------------------------
 links =
-  css:
+  css: ->
     a:
       cursor: "pointer"
       textDecoration: "none"
@@ -464,7 +467,7 @@ links =
 # Footnotes
 # ------------------------------------------------------------------------------
 footnotes =
-  css:
+  css: ->
     sup:
       verticalAlign: "super"
       lineHeight: 0
@@ -473,7 +476,7 @@ footnotes =
 # Lists
 # ------------------------------------------------------------------------------
 lists =
-  css:
+  css: ->
     li:
         listStyleType: "none"
         listStyleImage: "none"
@@ -491,7 +494,7 @@ lists =
 # Quotes
 # ------------------------------------------------------------------------------
 quote =
-  css:
+  css: ->
     blockquote:
       borderLeftWidth: "thick"
       borderLeftStyle: "solid"
@@ -512,7 +515,7 @@ code =
       rel: "stylesheet"
       type: "text/css"
     $("head").append link
-  css:
+  css: ->
     code:
       fontSize: typography.medium + "px"
       fontFamily: "Inconsolata"
@@ -549,7 +552,7 @@ image =
       filename = $(img).attr("src")
       if filename[-3..] in ["jpg", "png"]
           $(img).css("width", width_percentage(filename) + "%")
-  css:
+  css: ->
     img:
       display: "block"
       marginLeft: "auto"
@@ -558,7 +561,7 @@ image =
       height: "auto"
 
 figure =
-  css:
+  css: ->
     figure:
       marginBottom: "var(--base-line-height)"
       textAlign: "center"
@@ -574,7 +577,7 @@ figure =
 table =
   html: ->
     $("table").wrap("<div class='table'></div>");
-  css:
+  css: ->
     ".table":
       overflowX: "auto"
       overflowY: "hidden"
@@ -600,7 +603,7 @@ table =
 # MathJax
 # ------------------------------------------------------------------------------
 math = # if $(".math").length guard ? "force" option?
-  css:
+  css: ->
     ".MJXc-display":
       overflowX: "auto"
       overflowY: "hidden"
@@ -612,8 +615,8 @@ math = # if $(".math").length guard ? "force" option?
       /mathjax/.test src
     old.remove()
     insert_script
-      src: "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML" 
-      text: "MathJax.Hub.Config({
+      uri: "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML" 
+      src: "MathJax.Hub.Config({
                jax: ['output/CommonHTML'], 
                CommonHTML: {
                  scale: 100,
@@ -656,7 +659,7 @@ fontAwesome =
 # ------------------------------------------------------------------------------
 jQuery =
   html: ->
-    insert_script src: "https://code.jquery.com/jquery-3.0.0.min.js"
+    insert_script uri: "https://code.jquery.com/jquery-3.0.0.min.js"
  
  
 # Bibliography
@@ -801,18 +804,18 @@ proofs =
       if newSection.children().length > 0
         section.after(newSection)
         
-  js: "js/proofs.js"
+  js: -> src: "js/proofs.js"
 
 
 # Previews
 # ------------------------------------------------------------------------------
 previews = 
-  js: "js/preview.js"
+  js: -> src: "js/preview.js"
 
 
 # 'Classic' Theme
 # ------------------------------------------------------------------------------
-classic = [
+theme = [
   jQuery, 
   defaults, 
   typography, 
@@ -835,237 +838,32 @@ classic = [
   proofs,
   previews]
 
-
-# Modern/Slides Theme
-# ------------------------------------------------------------------------------
-
-# WARNING: broken ATM due to updates in the classic theme !!!
-
-modern = []
-
-modern.push modern.defaults = 
-  css:
-    "*":
-      margin: 0
-      padding: 0
-      border: 0
-      boxSizing: "border-box"
-      fontSize: "100%"
-      font: "inherit"
-      verticalAlign: "fontSizeline"
-    html:
-      lineHeight: 1
-    "ol, ul":
-      listStyle: "none"
-    "blockquote, q":
-      "quotes": "none"
-      "&:before":
-        content: "none"
-      "&:after":
-        content: "none"
-    table:
-      borderCollapse: "collapse"
-      borderSpacing: 0
-
-# TODO: "sizes" should be fontSize & lineHeight objects instead
-#       (and even maybe bundled with margins ?). Aria-hidden stuff?
-#       Use blast or regexp and JQuery to deal with the code.
-#       Apperently it's not merely aria-hidden ...
-#       Mmmmm -moz-user-select:none works on Firefox.
-#       Arf, the selection looks good with Opera, but the copy is
-#       borked (even in the surge.sh example)
-
-modern.push modern.typography = do ->
-  fontSize = 24 # 18 #24
-  lineHeight = fontSize * 1.5
-  ratio = 2
-  tiny  = Math.round(fontSize / ratio) + "px"
-  small  = Math.round(fontSize / ratio) + "px"
-  medium = Math.round(fontSize) + "px"
-  medium = 
-    fontSize: Math.round(fontSize) + "px"
-    lineHeight: 1.5 * Math.round(fontSize) + "px"
-  large  = 
-    fontSize: Math.round(fontSize * ratio) + "px"
-    lineHeight: 1.0 * Math.round(fontSize * ratio) + "px"
-  huge = 
-    fontSize: Math.round(fontSize * ratio * ratio) + "px"
-    lineHeight: 1.0 * Math.round(fontSize * ratio * ratio) + "px"
-
-  html = ->
-    family = "Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i"
-    link = $ "<link>",
-      href: "https://fonts.googleapis.com/css?family=#{family}"
-      rel: "stylesheet"
-      type: "text/css"
-    $("head").append link
-    family = "Titillium+Web:200,200i,300,300i,400,400i,600,600i,700,700i,900"
-    link = $ "<link>",
-      href: "https://fonts.googleapis.com/css?family=#{family}"
-      rel: "stylesheet"
-      type: "text/css"
-    $("head").append link
-  css =
-    html:
-      fontSize: medium.fontSize
-      lineHeight: medium.lineHeight
-      fontStyle: "normal"
-      fontWeight: "normal" # 300 #"normal" # fuck 300 is too thin and normal too fat.
-      fontFamily: "Source Sans Pro, sans-serif"
-      em:
-        fontStyle: "italic"
-      strong:
-        fontWeight: "bold"
-      textRendering: "optimizeLegibility"
-      textAlign: "left"
-      "p, .p, p.alt":
-        fontFamily: "Titillium Web"
-        fontSize: 24 + "px"
-        color: "black"
-        marginBottom: medium.lineHeight
-        #textAlign: "justify"
-#        hyphens: "auto"
-#        MozHyphens: "auto"
-        color: "#2f2f2f"
-      section:
-        marginBottom: medium.lineHeight # ???
-
-
-  {fontSize, lineHeight, ratio, tiny, small, medium, large, huge, html, css}
-
-modern.push modern.headings = do ->
-  mt = modern.typography
-  css:
-    h1:
-      fontSize: mt.huge.fontSize
-      fontWeight: 200
-      lineHeight: mt.huge.lineHeight #1.25 * mt.lineHeight + "px"
-      #marginTop: 2.0 * mt.lineHeight + "px"
-      #marginBottom: 0.75 * mt.lineHeight + "px"
-    h2:
-      fontSize: mt.large.fontSize
-      fontWeight: 200
-      lineHeight: mt.large.fontSize #mt.lineHeight + "px"
-      #marginBottom: 0.5 * mt.lineHeight + "px"
-    "h3, h4, h5, h6":
-      fontSize: mt.medium.fontSize
-      lineHeight: mt.medium.lineHeight
-      fontWeight: "bold"
-      marginRight: "1em"
-      display: "inline"
-
-modern.push modern.layout = do ->
-  mt = modern.typography
-  css:
-    html:
-      hyphens: "auto"
-      "-moz-hyphens": "auto"
-      "-webkit-hyphens": "auto"
-      "main, .main": 
-        width: "100vw"
-        height: "100vh"
-        padding: mt.large.lineHeight #mt.huge.fontSize #"5vmax" # or something like 1 em for huge text?
-      section:
-        maxWidth: "32em"
-        margin: "auto"
-      header:
-        marginBottom: mt.large.lineHeight
-      ".textbox":
-        padding: "1em"
-        margin: "0 auto"
-        boxShadow: "0 0 1em rgba(0,0,0,0.25)"
-        #boxShadow: "0px 3px 5px 0px #656565" 
-   
-modern.push modern.math = math
-
-modern.push modern.fontAwesome = fontAwesome
-
-modern.push modern.jQuery = jQuery
-
-# TODO: see how surge.sh is doing: animation, fade out of non-commands,
-#       and copy text is only the commands FFS!
-#       Mmmm the pre-wrap is NICE but sometimes the text cannot be
-#       folded (as if it was a big word) --> need blast to get to the
-#       letter level?
-modern.push modern.code = do ->
-  mt = modern.typography
-  html: ->
-    family = "Fira+Mono"#"Cousine"
-    link = $ "<link>",
-      href: "https://fonts.googleapis.com/css?family=#{family}"
-      rel: "stylesheet"
-      type: "text/css"
-    $("head").append link
-  css:
-    # need to match the x-height differently in a paragraph.
-    code:
-      fontSize: "22px" #mt.medium.fontSize
-      fontFamily: "Fira Mono" #"'Cousine', monospace"
-    pre:
-      fontSize: "22px" #mt.medium.fontSize
-      display: "block"
-      #maxWidth: "42em"
-      whiteSpace: "pre-wrap"
-      overflowX: "auto" # should be required but well ... see "# ========"
-      boxShadow: "0 0 1em rgba(0,0,0,0.25)"
-      borderRadius: "5px"
-      color: "#e8e8e8"
-      backgroundColor: "#404040"
-      marginBottom: 1 * mt.medium.lineHeight
-      paddingLeft: "1.5em"
-      paddingRight: "1.5em"
-      paddingTop: "1.5em"
-      paddingBottom: "1.5em"
-
-      code:
-        fontSize: "20px" #mt.medium.fontSize
-        lineHeight: "30px"
-        display: "inline-block"
-        maxWidth: "40em"
-
-#modern.push modern.coffeescript = 
-#  html: ->
-#    insert_script src: "https://cdnjs.cloudflare.com/ajax/libs/coffee-script/1.12.7/coffee-script.js"
-
-modern.push modern.animation =
-  html: ->
-    insert_script src: "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.2/TweenMax.min.js"
-
-modern.push modern.blast =
-  js: "js/blast.js"
-
-
 # Apply Style Components
 # ------------------------------------------------------------------------------
-
-_theme = undefined
 
 ES = 
   cssify: (options) ->
     csss = []
-    for elt in _theme
+    for elt in theme
       if elt.css?
         css_ = elt.css
-        if type(css_) is "function"
-          css_ = css_(options)
+        css_ = css_(options)
         csss.push css_
     rules = _.merge({}, csss...)
     cssify rules      
 
   domify: (options) ->
-    for elt in _theme
+    for elt in theme
       if elt.html?
         elt.html(options)
 
   scriptify: (options) ->
-    for elt in _theme
+    for elt in theme
       if elt.js?
-        js = elt.js
-        if type(js) is "function"
-          js = js(options)
-        jsPath = path.join(__dirname, elt.js)
-        text = fs.readFileSync jsPath, "utf8"
-        insert_script text: text
+        jsPath = elt.js(options).src
+        jsPath = path.join(__dirname, jsPath)
+        jsSrc = fs.readFileSync jsPath, "utf8"
+        insert_script src: jsSrc
 
 # Commande-Line API
 # ------------------------------------------------------------------------------
@@ -1079,11 +877,7 @@ main = ->
   CSSFilename = if args.s then args.s else args.style
 
   bibliographyFilenames = if args.b then args.b else args.bibliography
-  theme = if args.t then args.t else if args.theme then args.theme else "classic"
   inputHTMLFilenames = args._
-
-  # Theme selection
-  _theme = eval(theme) # TODO: error handling, theme dict, etc.
 
   # If present, bibliographyFilename shall be a CSL json file.
   if bibliographyFilenames?
