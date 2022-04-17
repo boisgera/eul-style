@@ -1,8 +1,0 @@
-#!/bin/bash
-
-coffee -c js/*.coffee
-coffee -c index.coffee
-mv index.js _index.js
-echo "#!/usr/bin/env node" | cat - _index.js > index.js
-rm _index.js
-sudo npm link

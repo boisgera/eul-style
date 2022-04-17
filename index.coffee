@@ -1,5 +1,12 @@
 #!/usr/bin/env coffee
 
+# TODO
+# ------------------------------------------------------------------------------
+#
+#   - Document bibliography filenames & other options
+#
+#   - Turn usage doc into CLI command. 
+
 # Usage
 # ------------------------------------------------------------------------------
 #
@@ -10,7 +17,7 @@
 
 # Imports
 # ------------------------------------------------------------------------------
-
+#
 # Standard Node Library
 fs               = require "fs"
 path             = require "path"
@@ -44,8 +51,23 @@ String::startsWith = (string) ->
     this[...string.length] is string
 
 
-# Insert Scripts into HTML
+# Insert links and scripts into the HTML document
 # ------------------------------------------------------------------------------
+insert_stylesheet = ({uri, src}) ->
+    if uri?
+      link = $ "<link>",
+        type: "text/css"
+        rel: "stylesheet" 
+        href: uri
+      $("head").append link
+      link
+    else if src?
+      style = $ "<style>",
+        type: "text/css"
+      style.text(src)
+      $("head").append style
+      style
+
 insert_script = ({uri, src}) ->
     # ⚠️ Use DOM API instead of JQuery. 
     # When used, jquery adds weird script tags 
@@ -55,9 +77,10 @@ insert_script = ({uri, src}) ->
     script.src = uri unless not uri
     script.text = src unless not uri
     window.document.head.appendChild script
+    script
 
 
-# Custom CSS Reset
+# Custom (ugly) CSS reset
 # ------------------------------------------------------------------------------
 defaults =
   css: ->
@@ -167,11 +190,7 @@ typography = do ->
         "|Alegreya+SC:400,700,900,400italic,700italic,900italic" +
         "|Alegreya+Sans:100,300,400,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic" +              
         "|Alegreya+Sans+SC:100,300,400,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic"
-      link = $ "<link>",
-        href: "https://fonts.googleapis.com/css?family=#{family}"
-        rel: "stylesheet"
-        type: "text/css"
-      $("head").append link
+      insert_stylesheet = uri: "https://fonts.googleapis.com/css?family=#{family}"
 
     css: ->
       html:
@@ -510,11 +529,7 @@ quote =
 code =
   html: ->
     family = "Inconsolata:400,700"
-    link = $ "<link>",
-      href: "https://fonts.googleapis.com/css?family=#{family}"
-      rel: "stylesheet"
-      type: "text/css"
-    $("head").append link
+    insert_stylesheet uri: "https://fonts.googleapis.com/css?family=#{family}"
   css: ->
     code:
       fontSize: typography.medium + "px"
@@ -650,10 +665,7 @@ math = # if $(".math").length guard ? "force" option?
 # ------------------------------------------------------------------------------
 fontAwesome = 
   html: ->
-    link = $ "<link>",
-      rel: "stylesheet"
-      href: "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
-    $("head").append link
+    insert_stylesheet uri: "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
 
 # JQuery
 # ------------------------------------------------------------------------------
@@ -841,7 +853,7 @@ theme = [
 # Apply Style Components
 # ------------------------------------------------------------------------------
 
-ES = 
+eulStyle = 
   cssify: (options) ->
     csss = []
     for elt in theme
@@ -891,7 +903,7 @@ main = ->
 
   # Generate the CSS
   aboutCSS = {}
-  css_text = ES.cssify options
+  css_text = eulStyle.cssify options
   if CSSFilename?
     try
       fs.writeFileSync CSSFilename, css_text, "utf-8"
@@ -920,22 +932,15 @@ main = ->
 
     $ = jquery(window)
     if aboutCSS.external? # Link the stylesheet
-      link = $ "<link>",
-        href: aboutCSS.external 
-        rel: "stylesheet" 
-        type: "text/css"
-      $("head").append link
-    else # Inline the stylesheet
-      style = $ "<style></style>",
-        type: "text/css"
-        text: aboutCSS.inline
-      $("head").append style
+      insert_stylesheet uri: aboutCSS.external 
+    else # Inline the stylesheet.
+      insert_stylesheet src: aboutCSS.inline
 
     # Perform the other DOM transformations
-    ES.domify(options) 
+    eulStyle.domify(options) 
 
     # Include JS scripts required at runtime
-    ES.scriptify(options)
+    eulStyle.scriptify(options)
 
     # Write the result
     outputString = window.document.documentElement.outerHTML

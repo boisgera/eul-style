@@ -1,7 +1,7 @@
 {
   "name": "eul-style",
-  "version": "1.0.6",
-  "description": "Apply eul's style.",
+  "version": "2.0.0",
+  "description": "Eul's style for HTML document.",
   "scripts": {
     "prepublish": "npm run build",
     "build": "./build"
@@ -23,16 +23,13 @@
     "js"
   ],
   "dependencies": {
-    "@boisgera/cssify": "0.0.4",
-    "blast-text": "^2.0.0",
     "jquery": "^3.6.0",
-    "jsdom": "^8.5.0",
-    "lodash": "^4.17.10",
-    "minimist": "^1.2.0",
-    "process": "^0.11.2"
+    "jsdom": "^19.0.0",
+    "lodash": "^4.17.21",
+    "minimist": "^1.2.6",
+    "process": "^0.11.10"
   },
   "devDependencies": {
-    "@boisgera/cssify": "0.0.4",
-    "coffee-script": "^1.12.7"
+    "coffeescript": "^2.6.1"
   }
 }
